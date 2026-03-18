@@ -2,8 +2,12 @@ import { useEditor, EditorContent } from '@tiptap/react';
 import { BubbleMenu } from '@tiptap/react/menus';
 import StarterKit from '@tiptap/starter-kit';
 import Placeholder from '@tiptap/extension-placeholder';
+import Typography from '@tiptap/extension-typography';
 import { Markdown } from 'tiptap-markdown';
+import GlobalDragHandle from 'tiptap-extension-global-drag-handle';
 import { useEffect } from 'react';
+import { SlashCommand } from '../extensions/slash-command';
+import { getSlashCommandSuggestion } from './SlashCommandList';
 
 interface Props {
   content: string;
@@ -20,12 +24,19 @@ export default function TipTapEditor({ content, onChange, editable = true }: Pro
         orderedList: { keepMarks: true, keepAttributes: false },
       }),
       Placeholder.configure({
-        placeholder: 'Start writing...',
+        placeholder: 'Type "/" for commands...',
       }),
+      Typography,
       Markdown.configure({
         html: false,
         transformCopiedText: true,
         transformPastedText: true,
+      }),
+      SlashCommand.configure({
+        suggestion: getSlashCommandSuggestion(),
+      }),
+      GlobalDragHandle.configure({
+        dragHandleWidth: 20,
       }),
     ],
     content,
@@ -55,89 +66,39 @@ export default function TipTapEditor({ content, onChange, editable = true }: Pro
 
   return (
     <div className="tiptap-editor h-full flex flex-col">
-      {/* Notion-like Bubble Menu - appears on text selection */}
+      {/* Bubble Menu - appears on text selection */}
       <BubbleMenu
         editor={editor}
         tippyOptions={{ duration: 150, placement: 'top' }}
         className="flex items-center gap-0.5 px-1 py-1 rounded-lg shadow-lg border border-border"
         style={{ backgroundColor: 'var(--card)' }}
       >
-        <BubbleButton
-          onClick={() => editor.chain().focus().toggleBold().run()}
-          active={editor.isActive('bold')}
-          title="Bold"
-        >
+        <BubbleButton onClick={() => editor.chain().focus().toggleBold().run()} active={editor.isActive('bold')} title="Bold">
           <strong>B</strong>
         </BubbleButton>
-        <BubbleButton
-          onClick={() => editor.chain().focus().toggleItalic().run()}
-          active={editor.isActive('italic')}
-          title="Italic"
-        >
+        <BubbleButton onClick={() => editor.chain().focus().toggleItalic().run()} active={editor.isActive('italic')} title="Italic">
           <em>I</em>
         </BubbleButton>
-        <BubbleButton
-          onClick={() => editor.chain().focus().toggleStrike().run()}
-          active={editor.isActive('strike')}
-          title="Strikethrough"
-        >
+        <BubbleButton onClick={() => editor.chain().focus().toggleStrike().run()} active={editor.isActive('strike')} title="Strikethrough">
           <s>S</s>
         </BubbleButton>
-        <BubbleButton
-          onClick={() => editor.chain().focus().toggleCode().run()}
-          active={editor.isActive('code')}
-          title="Code"
-        >
+        <BubbleButton onClick={() => editor.chain().focus().toggleCode().run()} active={editor.isActive('code')} title="Code">
           {'</>'}
         </BubbleButton>
         <BubbleDivider />
-        <BubbleButton
-          onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
-          active={editor.isActive('heading', { level: 1 })}
-          title="Heading 1"
-        >
+        <BubbleButton onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()} active={editor.isActive('heading', { level: 1 })} title="H1">
           H1
         </BubbleButton>
-        <BubbleButton
-          onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
-          active={editor.isActive('heading', { level: 2 })}
-          title="Heading 2"
-        >
+        <BubbleButton onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()} active={editor.isActive('heading', { level: 2 })} title="H2">
           H2
         </BubbleButton>
-        <BubbleButton
-          onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
-          active={editor.isActive('heading', { level: 3 })}
-          title="Heading 3"
-        >
+        <BubbleButton onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()} active={editor.isActive('heading', { level: 3 })} title="H3">
           H3
-        </BubbleButton>
-        <BubbleDivider />
-        <BubbleButton
-          onClick={() => editor.chain().focus().toggleBulletList().run()}
-          active={editor.isActive('bulletList')}
-          title="Bullet List"
-        >
-          •
-        </BubbleButton>
-        <BubbleButton
-          onClick={() => editor.chain().focus().toggleOrderedList().run()}
-          active={editor.isActive('orderedList')}
-          title="Numbered List"
-        >
-          1.
-        </BubbleButton>
-        <BubbleButton
-          onClick={() => editor.chain().focus().toggleBlockquote().run()}
-          active={editor.isActive('blockquote')}
-          title="Quote"
-        >
-          "
         </BubbleButton>
       </BubbleMenu>
 
-      {/* Editor area - clean, no toolbar */}
-      <div className="flex-1 overflow-auto bg-card">
+      {/* Editor area */}
+      <div className="flex-1 overflow-auto">
         <EditorContent editor={editor} className="h-full" />
       </div>
     </div>
@@ -145,23 +106,14 @@ export default function TipTapEditor({ content, onChange, editable = true }: Pro
 }
 
 function BubbleButton({ children, onClick, active, title }: {
-  children: React.ReactNode;
-  onClick: () => void;
-  active?: boolean;
-  title?: string;
+  children: React.ReactNode; onClick: () => void; active?: boolean; title?: string;
 }) {
   return (
-    <button
-      onClick={onClick}
-      title={title}
+    <button onClick={onClick} title={title}
       className={`w-7 h-7 flex items-center justify-center rounded text-[12px] font-medium transition-colors ${
-        active
-          ? 'bg-primary/15 text-primary'
-          : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+        active ? 'bg-primary/15 text-primary' : 'text-muted-foreground hover:bg-muted hover:text-foreground'
       }`}
-    >
-      {children}
-    </button>
+    >{children}</button>
   );
 }
 

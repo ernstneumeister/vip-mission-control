@@ -233,3 +233,38 @@ body {
   background: var(--muted);
   font-weight: 600;
 }
+
+/* Drag handle */
+.drag-handle {
+  position: fixed;
+  opacity: 1;
+  transition: opacity ease-in 0.2s;
+  border-radius: 0.25rem;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 16' style='fill: rgba(0,0,0,0.35)'%3E%3Ccircle cx='3' cy='2' r='1.5'/%3E%3Ccircle cx='7' cy='2' r='1.5'/%3E%3Ccircle cx='3' cy='6' r='1.5'/%3E%3Ccircle cx='7' cy='6' r='1.5'/%3E%3Ccircle cx='3' cy='10' r='1.5'/%3E%3Ccircle cx='7' cy='10' r='1.5'/%3E%3Ccircle cx='3' cy='14' r='1.5'/%3E%3Ccircle cx='7' cy='14' r='1.5'/%3E%3C/svg%3E");
+  background-size: calc(0.5em + 2px);
+  background-repeat: no-repeat;
+  background-position: center;
+  width: 1.2rem;
+  height: 1.5rem;
+  cursor: grab;
+  z-index: 50;
+}
+
+.drag-handle:hover {
+  background-color: var(--muted);
+  transition: background-color 0.2s;
+}
+
+.dark .drag-handle {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 16' style='fill: rgba(255,255,255,0.35)'%3E%3Ccircle cx='3' cy='2' r='1.5'/%3E%3Ccircle cx='7' cy='2' r='1.5'/%3E%3Ccircle cx='3' cy='6' r='1.5'/%3E%3Ccircle cx='7' cy='6' r='1.5'/%3E%3Ccircle cx='3' cy='10' r='1.5'/%3E%3Ccircle cx='7' cy='10' r='1.5'/%3E%3Ccircle cx='3' cy='14' r='1.5'/%3E%3Ccircle cx='7' cy='14' r='1.5'/%3E%3C/svg%3E");
+}
+
+/* Slash command placeholder */
+.tiptap-editor .ProseMirror .is-empty::before {
+  content: attr(data-placeholder);
+  float: left;
+  color: var(--muted-foreground);
+  pointer-events: none;
+  height: 0;
+  font-style: italic;
+}
