@@ -56,10 +56,10 @@ export default function Sidebar() {
       {/* Bottom user section */}
       <div className="border-t border-[#E5E7EB] px-3 py-3">
         <div className="flex items-center gap-2 px-2 py-1.5">
-          <img src="/avatars/henry.jpg" alt="Henry" className="w-8 h-8 rounded-full object-cover" />
+          <img src="/avatars/ernst.jpg" alt="Ernst" className="w-8 h-8 rounded-full object-cover" />
           <div>
-            <div className="text-[13px] font-semibold text-[#111827]">Henry</div>
-            <div className="text-[11px] text-[#9CA3AF]">Orchestrator</div>
+            <div className="text-[13px] font-semibold text-[#111827]">Ernst</div>
+            <div className="text-[11px] text-[#9CA3AF]">Chief of Agents</div>
           </div>
         </div>
         <div className="flex items-center gap-2.5 px-3 py-1.5 mt-1 rounded-md text-[13px] font-medium text-[#9CA3AF] cursor-not-allowed">

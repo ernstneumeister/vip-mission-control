@@ -9,28 +9,27 @@ export default function Header({ searchQuery, onSearchChange }: Props) {
   const [time, setTime] = useState(new Date());
 
   useEffect(() => {
-    const interval = setInterval(() => setTime(new Date()), 30000);
+    const interval = setInterval(() => setTime(new Date()), 60000);
     return () => clearInterval(interval);
   }, []);
 
-  const dateStr = time.toLocaleDateString('en-US', {
-    weekday: 'short',
-    month: 'short',
+  const dateStr = time.toLocaleDateString('de-DE', {
+    weekday: 'long',
     day: 'numeric',
+    month: 'long',
     year: 'numeric',
     timeZone: 'Europe/Berlin',
   });
-  const timeStr = time.toLocaleTimeString('en-US', {
-    hour: 'numeric',
+  const timeStr = time.toLocaleTimeString('de-DE', {
+    hour: '2-digit',
     minute: '2-digit',
-    hour12: true,
     timeZone: 'Europe/Berlin',
   });
 
   return (
     <header className="h-[50px] bg-white border-b border-[#E5E7EB] flex items-center px-5 flex-shrink-0">
       <div className="text-[13px] text-[#6B7280] font-mono whitespace-nowrap">
-        {dateStr} · {timeStr} CET
+        {dateStr} · {timeStr} Uhr
       </div>
       <div className="flex-1 flex justify-center">
         <div className="relative w-[300px]">
