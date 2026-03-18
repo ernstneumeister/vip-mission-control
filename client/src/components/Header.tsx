@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import ThemeToggle from './ThemeToggle';
 
 interface Props {
   searchQuery: string;
@@ -27,13 +28,13 @@ export default function Header({ searchQuery, onSearchChange }: Props) {
   });
 
   return (
-    <header className="h-[50px] bg-white border-b border-[#E5E7EB] flex items-center px-5 flex-shrink-0">
-      <div className="text-[13px] text-[#6B7280] font-mono whitespace-nowrap">
+    <header className="h-[50px] bg-card border-b border-border flex items-center px-5 flex-shrink-0">
+      <div className="text-[13px] text-muted-foreground font-mono whitespace-nowrap">
         {dateStr} · {timeStr} Uhr
       </div>
       <div className="flex-1 flex justify-center">
         <div className="relative w-[300px]">
-          <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#9CA3AF]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
           </svg>
           <input
@@ -41,11 +42,13 @@ export default function Header({ searchQuery, onSearchChange }: Props) {
             placeholder="Search tasks, activity, jobs..."
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
-            className="w-full h-[36px] bg-[#F3F4F6] border border-[#E5E7EB] rounded-lg pl-9 pr-3 text-[13px] text-[#374151] placeholder-[#9CA3AF] outline-none focus:border-[#2563EB] focus:ring-1 focus:ring-[#2563EB] transition-colors"
+            className="w-full h-[36px] bg-muted border border-border rounded-lg pl-9 pr-3 text-[13px] text-foreground placeholder-muted-foreground outline-none focus:border-primary focus:ring-1 focus:ring-ring transition-colors"
           />
         </div>
       </div>
-      <div className="w-[140px]" />
+      <div className="flex items-center gap-3">
+        <ThemeToggle />
+      </div>
     </header>
   );
 }

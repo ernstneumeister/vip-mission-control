@@ -48,7 +48,7 @@ export default function TaskDetail({ agents }: Props) {
   const refreshActivity = async (taskId: number) => setActivity(await getActivity(taskId));
 
   if (!task) {
-    return <div className="p-6 text-[14px] text-[#9CA3AF]">Loading...</div>;
+    return <div className="p-6 text-[14px] text-muted-foreground">Loading...</div>;
   }
 
   const agent = getAgentById(agents, task.agent_id);
@@ -118,12 +118,12 @@ export default function TaskDetail({ agents }: Props) {
 
   return (
     <div className="p-6 max-w-[1080px]">
-      <Link to="/tasks" className="inline-flex items-center gap-1 text-[14px] text-[#6B7280] hover:text-[#374151] no-underline mb-6 transition-colors">
+      <Link to="/tasks" className="inline-flex items-center gap-1 text-[14px] text-muted-foreground hover:text-foreground no-underline mb-6 transition-colors">
         ← Back to Tasks
       </Link>
 
       <div className="grid grid-cols-[320px_1fr] gap-8 items-start">
-        <div className="bg-white border border-[#E5E7EB] rounded-xl p-6">
+        <div className="bg-card border border-border rounded-xl p-6">
           {currentAgent && (
             <div className="text-center">
               <div
@@ -143,9 +143,9 @@ export default function TaskDetail({ agents }: Props) {
                 className="hidden"
                 onChange={handleAvatarUpload}
               />
-              <div className="text-[22px] font-bold text-[#111827] mt-4">{currentAgent.name}</div>
-              <div className="text-[14px] text-[#6B7280] mt-1">{currentAgent.role}</div>
-              <div className="text-[13px] text-[#9CA3AF] mt-1">{currentAgent.model}</div>
+              <div className="text-[22px] font-bold text-foreground mt-4">{currentAgent.name}</div>
+              <div className="text-[14px] text-muted-foreground mt-1">{currentAgent.role}</div>
+              <div className="text-[13px] text-muted-foreground mt-1">{currentAgent.model}</div>
             </div>
           )}
         </div>
@@ -155,10 +155,10 @@ export default function TaskDetail({ agents }: Props) {
             <input
               value={form.title}
               onChange={(e) => setForm((current) => ({ ...current, title: e.target.value }))}
-              className="w-full text-[28px] font-bold text-[#111827] border border-[#E5E7EB] rounded-lg px-3 py-2 outline-none focus:border-[#2563EB] mb-3"
+              className="w-full text-[28px] font-bold text-foreground border border-border rounded-lg px-3 py-2 bg-card outline-none focus:border-primary mb-3"
             />
           ) : (
-            <h1 className="text-[28px] font-bold text-[#111827] mb-1">{task.title}</h1>
+            <h1 className="text-[28px] font-bold text-foreground mb-1">{task.title}</h1>
           )}
 
           {editing ? (
@@ -166,37 +166,37 @@ export default function TaskDetail({ agents }: Props) {
               value={form.description}
               onChange={(e) => setForm((current) => ({ ...current, description: e.target.value }))}
               rows={2}
-              className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg text-[14px] text-[#374151] outline-none focus:border-[#2563EB] resize-none mb-4"
+              className="w-full px-3 py-2 border border-border rounded-lg text-[14px] text-foreground bg-card outline-none focus:border-primary resize-none mb-4"
               placeholder="Short description"
             />
           ) : (
-            task.description && <p className="text-[14px] text-[#6B7280] mb-4">{task.description}</p>
+            task.description && <p className="text-[14px] text-muted-foreground mb-4">{task.description}</p>
           )}
 
           {task.scheduled_for && !editing && (
-            <p className="text-[13px] text-[#9CA3AF] mb-4">Scheduled for {formatDateTime(task.scheduled_for)}</p>
+            <p className="text-[13px] text-muted-foreground mb-4">Scheduled for {formatDateTime(task.scheduled_for)}</p>
           )}
 
           <div className="mb-6">
-            <label className="block text-[13px] font-semibold text-[#374151] mb-2">Instructions</label>
+            <label className="block text-[13px] font-semibold text-foreground mb-2">Instructions</label>
             {editing ? (
               <textarea
                 value={form.instructions}
                 onChange={(e) => setForm((current) => ({ ...current, instructions: e.target.value }))}
                 rows={8}
-                className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg text-[13px] outline-none focus:border-[#2563EB] resize-y"
+                className="w-full px-3 py-2 border border-border rounded-lg text-[13px] bg-card text-foreground outline-none focus:border-primary resize-y"
               />
             ) : (
-              <div className="bg-white border border-[#E5E7EB] rounded-lg p-4 text-[13px] text-[#374151] leading-relaxed whitespace-pre-wrap">
+              <div className="bg-card border border-border rounded-lg p-4 text-[13px] text-foreground leading-relaxed whitespace-pre-wrap">
                 {task.instructions || 'No instructions'}
               </div>
             )}
           </div>
 
-          <div className="bg-white border border-[#E5E7EB] rounded-xl p-5 mb-6">
+          <div className="bg-card border border-border rounded-xl p-5 mb-6">
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-[12px] font-semibold text-[#6B7280] uppercase tracking-wider mb-1">Status</label>
+                <label className="block text-[12px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">Status</label>
                 {editing ? (
                   <select
                     value={form.status}
@@ -212,7 +212,7 @@ export default function TaskDetail({ agents }: Props) {
                 )}
               </div>
               <div>
-                <label className="block text-[12px] font-semibold text-[#6B7280] uppercase tracking-wider mb-1">Assigned To</label>
+                <label className="block text-[12px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">Assigned To</label>
                 {editing ? (
                   <select
                     value={form.agent_id}
@@ -228,7 +228,7 @@ export default function TaskDetail({ agents }: Props) {
                 )}
               </div>
               <div>
-                <label className="block text-[12px] font-semibold text-[#6B7280] uppercase tracking-wider mb-1">Scheduled For</label>
+                <label className="block text-[12px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">Scheduled For</label>
                 {editing ? (
                   <input
                     type="datetime-local"
@@ -237,20 +237,20 @@ export default function TaskDetail({ agents }: Props) {
                     className={inputClass}
                   />
                 ) : (
-                  <div className="text-[13px] text-[#374151] h-[36px] flex items-center">{formatDateTime(task.scheduled_for)}</div>
+                  <div className="text-[13px] text-foreground h-[36px] flex items-center">{formatDateTime(task.scheduled_for)}</div>
                 )}
               </div>
               <div>
-                <label className="block text-[12px] font-semibold text-[#6B7280] uppercase tracking-wider mb-1">Created</label>
-                <div className="text-[13px] text-[#374151] h-[36px] flex items-center">{formatDate(task.created_at)}</div>
+                <label className="block text-[12px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">Created</label>
+                <div className="text-[13px] text-foreground h-[36px] flex items-center">{formatDate(task.created_at)}</div>
               </div>
             </div>
           </div>
 
-          <div className="flex items-center gap-4 mb-8 pt-2 border-t border-[#F3F4F6]">
+          <div className="flex items-center gap-4 mb-8 pt-2 border-t border-border/50">
             {editing ? (
               <>
-                <button onClick={handleSave} className="text-[13px] font-semibold text-[#2563EB] hover:text-[#1D4ED8]">Save Changes</button>
+                <button onClick={handleSave} className="text-[13px] font-semibold text-primary hover:opacity-80">Save Changes</button>
                 <button
                   onClick={() => {
                     setEditing(false);
@@ -263,38 +263,38 @@ export default function TaskDetail({ agents }: Props) {
                       scheduled_for: toDateTimeLocal(task.scheduled_for),
                     });
                   }}
-                  className="text-[13px] text-[#6B7280] hover:text-[#374151]"
+                  className="text-[13px] text-muted-foreground hover:text-foreground"
                 >
                   Cancel
                 </button>
               </>
             ) : (
-              <button onClick={() => setEditing(true)} className="text-[13px] font-semibold text-[#2563EB] hover:text-[#1D4ED8]">Edit task</button>
+              <button onClick={() => setEditing(true)} className="text-[13px] font-semibold text-primary hover:opacity-80">Edit task</button>
             )}
-            <button onClick={handleArchive} className="text-[13px] text-[#6B7280] hover:text-[#F59E0B]">Archive task</button>
-            <button onClick={handleDelete} className="text-[13px] text-[#EF4444] hover:text-[#DC2626]">Delete task</button>
+            <button onClick={handleArchive} className="text-[13px] text-muted-foreground hover:text-amber-500">Archive task</button>
+            <button onClick={handleDelete} className="text-[13px] text-destructive hover:opacity-80">Delete task</button>
           </div>
 
           <div>
-            <h2 className="text-[16px] font-bold text-[#111827] mb-3">Activity Log</h2>
+            <h2 className="text-[16px] font-bold text-foreground mb-3">Activity Log</h2>
             {activity.length === 0 ? (
-              <div className="text-[13px] text-[#9CA3AF]">No activity recorded</div>
+              <div className="text-[13px] text-muted-foreground">No activity recorded</div>
             ) : (
-              <div className="bg-white border border-[#E5E7EB] rounded-xl px-4">
+              <div className="bg-card border border-border rounded-xl px-4">
                 {activity.map((log, idx) => {
                   const logAgent = log.agent_id ? getAgentById(agents, log.agent_id) : null;
                   return (
-                    <div key={log.id} className={`flex gap-3 py-3 ${idx < activity.length - 1 ? 'border-b border-[#F3F4F6]' : ''}`}>
+                    <div key={log.id} className={`flex gap-3 py-3 ${idx < activity.length - 1 ? 'border-b border-border/50' : ''}`}>
                       <div className="flex-shrink-0 mt-0.5">
                         {logAgent ? (
                           <AgentBadge agent={logAgent} size="sm" />
                         ) : (
-                          <div className="w-5 h-5 rounded bg-[#F3F4F6] flex items-center justify-center text-[10px] text-[#9CA3AF]">⚡</div>
+                          <div className="w-5 h-5 rounded bg-muted flex items-center justify-center text-[10px] text-muted-foreground">⚡</div>
                         )}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <div className="text-[13px] text-[#374151]">{log.details || log.action}</div>
-                        <div className="text-[11px] text-[#9CA3AF] mt-0.5">{formatDateTime(log.created_at)}</div>
+                        <div className="text-[13px] text-foreground">{log.details || log.action}</div>
+                        <div className="text-[11px] text-muted-foreground mt-0.5">{formatDateTime(log.created_at)}</div>
                       </div>
                     </div>
                   );
@@ -315,4 +315,4 @@ function toDateTimeLocal(value: string | null) {
   return local.toISOString().slice(0, 16);
 }
 
-const inputClass = 'w-full h-[36px] px-3 border border-[#E5E7EB] rounded-lg text-[13px] outline-none focus:border-[#2563EB]';
+const inputClass = 'w-full h-[36px] px-3 border border-border rounded-lg bg-card text-[13px] text-foreground outline-none focus:border-primary';

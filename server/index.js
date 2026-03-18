@@ -255,11 +255,29 @@ app.delete('/api/recurring/:id', (req, res) => {
   res.json({ success: true });
 });
 
+// ─── Cron Cache ───
+let cronCache = { data: null, expiresAt: 0 };
+
+function getCronListCached(fresh = false) {
+  const now = Date.now();
+  if (!fresh && cronCache.data && now < cronCache.expiresAt) {
+    return cronCache.data;
+  }
+  const output = execSync('openclaw cron list --json', { encoding: 'utf-8', timeout: 15000 });
+  const data = JSON.parse(output);
+  cronCache = { data, expiresAt: now + 5000 };
+  return data;
+}
+
+function invalidateCronCache() {
+  cronCache = { data: null, expiresAt: 0 };
+}
+
 // ─── Cron (OpenClaw) ───
 app.get('/api/cron', (req, res) => {
   try {
-    const output = execSync('openclaw cron list --json', { encoding: 'utf-8', timeout: 10000 });
-    const data = JSON.parse(output);
+    const fresh = req.query.fresh === '1';
+    const data = getCronListCached(fresh);
     const jobs = (data.jobs || []).map(job => ({
       id: job.id,
       name: job.name,
@@ -280,9 +298,84 @@ app.get('/api/cron', (req, res) => {
   }
 });
 
+app.get('/api/cron/:id', (req, res) => {
+  try {
+    const fresh = req.query.fresh === '1';
+    const data = getCronListCached(fresh);
+    const job = (data.jobs || []).find(j => j.id === req.params.id);
+    if (!job) return res.status(404).json({ error: 'Job not found' });
+    res.json({
+      id: job.id,
+      name: job.name,
+      description: job.description || '',
+      enabled: job.enabled,
+      schedule: job.schedule,
+      sessionTarget: job.sessionTarget,
+      agentId: job.agentId,
+      model: job.model || null,
+      wakeMode: job.wakeMode || 'now',
+      lastStatus: job.state?.lastStatus || null,
+      lastRunAt: job.state?.lastRunAtMs ? new Date(job.state.lastRunAtMs).toISOString() : null,
+      nextRunAt: job.state?.nextRunAtMs ? new Date(job.state.nextRunAtMs).toISOString() : null,
+      lastDurationMs: job.state?.lastDurationMs || null,
+      consecutiveErrors: job.state?.consecutiveErrors || 0,
+      createdAt: job.createdAtMs ? new Date(job.createdAtMs).toISOString() : null,
+      updatedAt: job.updatedAtMs ? new Date(job.updatedAtMs).toISOString() : null,
+      payload: job.payload?.text || job.payload?.message || '',
+      payloadRaw: job.payload || {},
+    });
+  } catch(e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.get('/api/cron/:id/runs', (req, res) => {
+  try {
+    const limit = req.query.limit || '20';
+    const output = execSync(`openclaw cron runs --id ${req.params.id} --limit ${limit}`, { encoding: 'utf-8', timeout: 30000 });
+    const data = JSON.parse(output);
+    res.json(data);
+  } catch(e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.patch('/api/cron/:id', (req, res) => {
+  try {
+    const { name, schedule, timezone, message, description, model, session } = req.body;
+    const args = [];
+    if (name) args.push(`--name "${name}"`);
+    if (schedule) args.push(`--cron "${schedule}"`);
+    if (timezone) args.push(`--tz "${timezone}"`);
+    if (message) args.push(`--message "${message.replace(/"/g, '\\"')}"`);
+    if (description) args.push(`--description "${description.replace(/"/g, '\\"')}"`);
+    if (model) args.push(`--model "${model}"`);
+    if (session) args.push(`--session "${session}"`);
+
+    if (args.length === 0) return res.status(400).json({ error: 'No fields to update' });
+
+    const cmd = `openclaw cron edit ${req.params.id} ${args.join(' ')}`;
+    execSync(cmd, { encoding: 'utf-8', timeout: 15000 });
+    invalidateCronCache();
+    res.json({ success: true });
+  } catch(e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.post('/api/cron/:id/run', (req, res) => {
+  try {
+    execSync(`openclaw cron run ${req.params.id}`, { encoding: 'utf-8', timeout: 15000 });
+    res.json({ success: true });
+  } catch(e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 app.post('/api/cron/:id/enable', (req, res) => {
   try {
     execSync(`openclaw cron enable ${req.params.id}`, { encoding: 'utf-8', timeout: 10000 });
+    invalidateCronCache();
     res.json({ success: true });
   } catch(e) {
     res.status(500).json({ error: e.message });
@@ -292,6 +385,7 @@ app.post('/api/cron/:id/enable', (req, res) => {
 app.post('/api/cron/:id/disable', (req, res) => {
   try {
     execSync(`openclaw cron disable ${req.params.id}`, { encoding: 'utf-8', timeout: 10000 });
+    invalidateCronCache();
     res.json({ success: true });
   } catch(e) {
     res.status(500).json({ error: e.message });
@@ -301,6 +395,7 @@ app.post('/api/cron/:id/disable', (req, res) => {
 app.delete('/api/cron/:id', (req, res) => {
   try {
     execSync(`openclaw cron rm ${req.params.id}`, { encoding: 'utf-8', timeout: 10000 });
+    invalidateCronCache();
     res.json({ success: true });
   } catch(e) {
     res.status(500).json({ error: e.message });

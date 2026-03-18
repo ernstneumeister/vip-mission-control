@@ -106,40 +106,7 @@ if (templateCount === 0) {
   insertTemplate.run('Newsletter Draft', 'Create weekly newsletter draft in Kit', 'Review recent content, extract key insights, write newsletter copy following Ernst style guide, create draft in Kit.', 'henry');
 }
 
-// Seed some tasks
-const taskCount = db.prepare('SELECT COUNT(*) as c FROM tasks').get().c;
-if (taskCount === 0) {
-  const insertTask = db.prepare('INSERT INTO tasks (title, description, instructions, status, agent_id, template_id, scheduled_for) VALUES (?, ?, ?, ?, ?, ?, ?)');
-  const insertActivity = db.prepare('INSERT INTO activity_log (task_id, agent_id, action, details, created_at) VALUES (?, ?, ?, ?, ?)');
-
-  insertTask.run('Write Instagram carousel for webinar promo', 'Create a 5-slide carousel promoting the upcoming KI-System webinar', 'Use the instagram-reels skill. Theme: AI automation for coaches. Include CTA "Kommentiere SYSTEM". Follow Ernst brand voice.', 'scheduled', 'henry', 1, '2026-03-19T09:00:00Z');
-  insertTask.run('Review mission-control PR #42', 'Check the latest PR for the Mission Control dashboard', 'Review all changed files, run tests, check for TypeScript errors, verify the build passes.', 'in_progress', 'codex', 2, '2026-03-18T10:00:00Z');
-  insertTask.run('Analyze Sebiforce latest content', 'Weekly competitor content analysis', 'Scrape @stiefundgluecklich Instagram, analyze post frequency, engagement rates, content themes. Compare to our metrics.', 'queue', 'research', 3, '2026-03-18T14:00:00Z');
-  insertTask.run('Process YouTube video: KI für Experten', 'Full pipeline for latest recording', 'Run the youtube-full-pipeline skill on the Dropbox raw file. Generate titles, description, chapters, tags.', 'scheduled', 'henry', 4, '2026-03-20T06:00:00Z');
-  insertTask.run('Newsletter KW12', 'Weekly newsletter for calendar week 12', 'Theme: AI agents in daily business. Include latest YouTube video, upcoming webinar link, and Skool community highlights.', 'scheduled', 'henry', 5, '2026-03-19T08:00:00Z');
-  insertTask.run('Fix Dropbox sync race condition', 'Debug the bisync conflict detection', 'Investigate the race condition in clawd-dropbox-sync.sh where simultaneous edits cause conflicts. Propose and implement fix.', 'in_progress', 'codex', null, '2026-03-18T08:00:00Z');
-  insertTask.run('Research trending AI topics for Reels', 'Find 5 trending AI topics for this week', 'Search Twitter, Reddit, YouTube trending. Focus on AI agents, automation, and no-code tools. Deliver list with hook ideas.', 'done', 'research', null, '2026-03-17T10:00:00Z');
-  insertTask.run('Update Skool welcome sequence', 'Refresh the onboarding DMs', 'Review current welcome DM sequence, update for new MarketingOS features, add links to latest tutorials.', 'scheduled', 'henry', null, '2026-03-21T09:00:00Z');
-  insertTask.run('Webinar landing page A/B test', 'Create variant B of the webinar page', 'Duplicate current lp.ernstneumeister.de/ki-system page, change headline and hero image, deploy as /ki-system-b.', 'queue', 'codex', null, '2026-03-19T11:00:00Z');
-  insertTask.run('Audit Kit email deliverability', 'Check bounce rates and spam scores', 'Pull Kit analytics for last 30 days, check deliverability metrics, identify any issues with DNS/DKIM/SPF setup.', 'scheduled', 'research', null, '2026-03-20T14:00:00Z');
-  insertTask.run('Monthly revenue report', 'Generate March revenue analysis', 'Pull data from Google Sheets revenue tracker, calculate MRR, churn, growth rate. Format as Notion page.', 'done', 'henry', null, '2026-03-15T07:00:00Z');
-  insertTask.run('Instagram Reel: Behind the scenes', 'Create a BTS reel of the workspace', 'Use B-roll footage from the office cam, add text overlays about the AI setup, use Sally-style editing.', 'scheduled', 'henry', 1, '2026-03-22T10:00:00Z');
-
-  // Add activity logs
-  insertActivity.run(1, 'henry', 'created', 'Task created from template "Content Development"', '2026-03-17T15:00:00Z');
-  insertActivity.run(2, 'codex', 'created', 'Task created from template "Code Review"', '2026-03-17T09:00:00Z');
-  insertActivity.run(2, 'codex', 'status_changed', 'Status changed from scheduled to in_progress', '2026-03-18T10:05:00Z');
-  insertActivity.run(3, 'research', 'created', 'Task created', '2026-03-17T12:00:00Z');
-  insertActivity.run(3, 'research', 'status_changed', 'Status changed from scheduled to queue', '2026-03-18T08:00:00Z');
-  insertActivity.run(6, 'codex', 'created', 'Task created manually', '2026-03-17T14:00:00Z');
-  insertActivity.run(6, 'codex', 'status_changed', 'Status changed from scheduled to in_progress', '2026-03-18T08:30:00Z');
-  insertActivity.run(7, 'research', 'created', 'Task created', '2026-03-16T09:00:00Z');
-  insertActivity.run(7, 'research', 'status_changed', 'Status changed to done', '2026-03-17T11:30:00Z');
-  insertActivity.run(7, 'research', 'executed', 'Found 5 trending topics: AI Agents, MCP Protocol, Vibe Coding, AI Voice Cloning, No-Code Automation', '2026-03-17T11:30:00Z');
-  insertActivity.run(11, 'henry', 'created', 'Task created', '2026-03-14T08:00:00Z');
-  insertActivity.run(11, 'henry', 'status_changed', 'Status changed to done', '2026-03-15T07:30:00Z');
-  insertActivity.run(11, 'henry', 'executed', 'Report generated and posted to Notion', '2026-03-15T07:30:00Z');
-}
+// No task/activity seeds - tasks are created manually or via the UI
 
 // Migration: Add avatar_url column if not exists
 try { db.exec("ALTER TABLE agents ADD COLUMN avatar_url TEXT"); } catch(e) {}

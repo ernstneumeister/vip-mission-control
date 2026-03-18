@@ -59,6 +59,47 @@ export interface CronJob {
   payload: string;
 }
 
+export interface CronJobDetail {
+  id: string;
+  name: string;
+  description: string;
+  enabled: boolean;
+  schedule: { kind: string; expr: string; tz: string };
+  sessionTarget: string;
+  agentId: string;
+  model: string | null;
+  wakeMode: string;
+  lastStatus: string | null;
+  lastRunAt: string | null;
+  nextRunAt: string | null;
+  lastDurationMs: number | null;
+  consecutiveErrors: number;
+  createdAt: string | null;
+  updatedAt: string | null;
+  payload: string;
+  payloadRaw: any;
+}
+
+export interface CronRunEntry {
+  ts: number;
+  action: string;
+  status: string;
+  summary?: string;
+  error?: string;
+  runAtMs: number;
+  durationMs: number;
+  model?: string;
+  provider?: string;
+  usage?: { input_tokens: number; output_tokens: number; total_tokens: number };
+  deliveryStatus?: string;
+}
+
+export interface CronRunHistory {
+  entries: CronRunEntry[];
+  total: number;
+  hasMore: boolean;
+}
+
 export interface ActivityLog {
   id: number;
   task_id: number;

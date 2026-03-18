@@ -1,4 +1,4 @@
-import type { Agent, Task, Template, Recurring, ActivityLog, CronJob } from './types';
+import type { Agent, Task, Template, Recurring, ActivityLog, CronJob, CronJobDetail, CronRunHistory } from './types';
 
 const BASE = '/api';
 
@@ -54,6 +54,10 @@ export const getCronJobs = () => fetchJSON<CronJob[]>('/cron');
 export const enableCronJob = (id: string) => fetchJSON<{success: boolean}>(`/cron/${id}/enable`, { method: 'POST' });
 export const disableCronJob = (id: string) => fetchJSON<{success: boolean}>(`/cron/${id}/disable`, { method: 'POST' });
 export const deleteCronJob = (id: string) => fetchJSON<{success: boolean}>(`/cron/${id}`, { method: 'DELETE' });
+export const getCronJob = (id: string) => fetchJSON<CronJobDetail>(`/cron/${id}`);
+export const getCronRuns = (id: string, limit = 20) => fetchJSON<CronRunHistory>(`/cron/${id}/runs?limit=${limit}`);
+export const updateCronJob = (id: string, data: Record<string, any>) => fetchJSON<{success: boolean}>(`/cron/${id}`, { method: 'PATCH', body: JSON.stringify(data) });
+export const triggerCronRun = (id: string) => fetchJSON<{success: boolean}>(`/cron/${id}/run`, { method: 'POST' });
 
 // Activity
 export const getActivity = (taskId: number) => fetchJSON<ActivityLog[]>(`/activity/${taskId}`);

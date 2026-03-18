@@ -57,15 +57,15 @@ export default function TasksPage({ agents, searchQuery }: Props) {
 
   return (
     <div className="p-6">
-      <div className="flex items-center border-b border-[#E5E7EB] mb-6">
+      <div className="flex items-center border-b border-border mb-6">
         {subTabs.map((tab) => (
           <button
             key={tab.key}
             onClick={() => setSubTab(tab.key)}
             className={`px-4 py-2.5 text-[14px] font-medium border-b-2 transition-colors -mb-[1px] ${
               subTab === tab.key
-                ? 'text-[#2563EB] border-[#2563EB]'
-                : 'text-[#6B7280] border-transparent hover:text-[#374151]'
+                ? 'text-primary border-primary'
+                : 'text-muted-foreground border-transparent hover:text-foreground'
             }`}
           >
             {tab.label}
@@ -165,15 +165,15 @@ function TasksTab({ tasks, agents, viewMode, setViewMode, agentFilter, setAgentF
     <>
       <div className="flex items-center justify-between mb-4">
         <div>
-          <h1 className="text-[28px] font-bold text-[#111827]">Tasks</h1>
-          <p className="text-[14px] text-[#6B7280]">{activeCount} active · {totalCount} total</p>
+          <h1 className="text-[28px] font-bold text-foreground">Tasks</h1>
+          <p className="text-[14px] text-muted-foreground">{activeCount} active · {totalCount} total</p>
         </div>
         <div className="flex items-center gap-3">
           {viewMode === 'status' && (
             <select
               value={agentFilter}
               onChange={(e) => setAgentFilter(e.target.value)}
-              className="h-[36px] px-3 text-[13px] border border-[#E5E7EB] rounded-lg bg-white text-[#374151] outline-none"
+              className="h-[36px] px-3 text-[13px] border border-border rounded-lg bg-card text-foreground outline-none"
             >
               <option value="all">All Agents</option>
               {agents.map((a) => (
@@ -181,7 +181,7 @@ function TasksTab({ tasks, agents, viewMode, setViewMode, agentFilter, setAgentF
               ))}
             </select>
           )}
-          <div className="flex border border-[#E5E7EB] rounded-lg overflow-hidden">
+          <div className="flex border border-border rounded-lg overflow-hidden">
             {[
               { mode: 'agent' as ViewMode, icon: '👤', title: 'By Agent' },
               { mode: 'status' as ViewMode, icon: '📊', title: 'By Status' },
@@ -191,8 +191,8 @@ function TasksTab({ tasks, agents, viewMode, setViewMode, agentFilter, setAgentF
                 key={v.mode}
                 onClick={() => setViewMode(v.mode)}
                 title={v.title}
-                className={`w-[36px] h-[32px] flex items-center justify-center text-[14px] border-r last:border-r-0 border-[#E5E7EB] transition-colors ${
-                  viewMode === v.mode ? 'bg-[#F3F4F6]' : 'bg-white hover:bg-[#F9FAFB]'
+                className={`w-[36px] h-[32px] flex items-center justify-center text-[14px] border-r last:border-r-0 border-border transition-colors ${
+                  viewMode === v.mode ? 'bg-muted' : 'bg-card hover:bg-secondary'
                 }`}
               >
                 {v.icon}
@@ -201,7 +201,7 @@ function TasksTab({ tasks, agents, viewMode, setViewMode, agentFilter, setAgentF
           </div>
           <button
             onClick={onNewTask}
-            className="h-[36px] px-4 bg-[#2563EB] hover:bg-[#1D4ED8] text-white text-[14px] font-semibold rounded-lg transition-colors"
+            className="h-[36px] px-4 bg-primary hover:opacity-90 text-primary-foreground text-[14px] font-semibold rounded-lg transition-colors"
           >
             + New Task
           </button>
@@ -221,17 +221,17 @@ function AgentKanban({ tasks, agents }: { tasks: Task[]; agents: Agent[] }) {
       {agents.map((agent) => {
         const agentTasks = tasks.filter((t) => t.agent_id === agent.id);
         return (
-          <div key={agent.id} className="min-w-[260px] w-[260px] bg-white border border-[#E8E8E8] rounded-xl flex flex-col">
-            <div className="flex items-center gap-2 px-4 py-3 border-b border-[#F3F4F6]">
+          <div key={agent.id} className="min-w-[260px] w-[260px] bg-card border border-border rounded-xl flex flex-col">
+            <div className="flex items-center gap-2 px-4 py-3 border-b border-border/50">
               <AgentBadge agent={agent} size="md" />
               <div className="flex-1 min-w-0">
-                <div className="text-[15px] font-bold text-[#111827] truncate">{agent.name}</div>
-                <div className="text-[12px] text-[#9CA3AF] truncate">{agent.role}</div>
+                <div className="text-[15px] font-bold text-foreground truncate">{agent.name}</div>
+                <div className="text-[12px] text-muted-foreground truncate">{agent.role}</div>
               </div>
-              <span className="text-[14px] text-[#9CA3AF] font-medium">{agentTasks.length}</span>
+              <span className="text-[14px] text-muted-foreground font-medium">{agentTasks.length}</span>
             </div>
             <div className="p-2 flex-1 overflow-y-auto max-h-[calc(100vh-300px)]">
-              {agentTasks.length === 0 && <div className="text-[12px] text-[#9CA3AF] text-center py-6">No tasks</div>}
+              {agentTasks.length === 0 && <div className="text-[12px] text-muted-foreground text-center py-6">No tasks</div>}
               {agentTasks.map((task) => <TaskCard key={task.id} task={task} agents={agents} showStatus />)}
             </div>
           </div>
@@ -248,14 +248,14 @@ function StatusKanban({ tasks, agents }: { tasks: Task[]; agents: Agent[] }) {
       {statuses.map((status) => {
         const statusTasks = tasks.filter((t) => t.status === status);
         return (
-          <div key={status} className="min-w-[260px] w-[260px] bg-white border border-[#E8E8E8] rounded-xl flex flex-col">
-            <div className="flex items-center gap-2 px-4 py-3 border-b border-[#F3F4F6]">
+          <div key={status} className="min-w-[260px] w-[260px] bg-card border border-border rounded-xl flex flex-col">
+            <div className="flex items-center gap-2 px-4 py-3 border-b border-border/50">
               <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: STATUS_COLORS[status] }} />
-              <span className="text-[15px] font-bold text-[#111827] flex-1">{STATUS_LABELS[status]}</span>
-              <span className="text-[14px] text-[#9CA3AF] font-medium">{statusTasks.length}</span>
+              <span className="text-[15px] font-bold text-foreground flex-1">{STATUS_LABELS[status]}</span>
+              <span className="text-[14px] text-muted-foreground font-medium">{statusTasks.length}</span>
             </div>
             <div className="p-2 flex-1 overflow-y-auto max-h-[calc(100vh-300px)]">
-              {statusTasks.length === 0 && <div className="text-[12px] text-[#9CA3AF] text-center py-6">No tasks</div>}
+              {statusTasks.length === 0 && <div className="text-[12px] text-muted-foreground text-center py-6">No tasks</div>}
               {statusTasks.map((task) => <TaskCard key={task.id} task={task} agents={agents} showAgent />)}
             </div>
           </div>
@@ -268,14 +268,14 @@ function StatusKanban({ tasks, agents }: { tasks: Task[]; agents: Agent[] }) {
 function ListView({ tasks, agents }: { tasks: Task[]; agents: Agent[] }) {
   const navigate = useNavigate();
   return (
-    <div className="bg-white border border-[#E5E7EB] rounded-xl overflow-hidden">
+    <div className="bg-card border border-border rounded-xl overflow-hidden">
       <table className="w-full">
         <thead>
-          <tr className="border-b border-[#E5E7EB] bg-[#F9FAFB]">
-            <th className="text-left px-4 py-2.5 text-[12px] font-semibold text-[#6B7280] uppercase tracking-wider">Task</th>
-            <th className="text-left px-4 py-2.5 text-[12px] font-semibold text-[#6B7280] uppercase tracking-wider">Agent</th>
-            <th className="text-left px-4 py-2.5 text-[12px] font-semibold text-[#6B7280] uppercase tracking-wider">Status</th>
-            <th className="text-left px-4 py-2.5 text-[12px] font-semibold text-[#6B7280] uppercase tracking-wider">Scheduled</th>
+          <tr className="border-b border-border bg-secondary">
+            <th className="text-left px-4 py-2.5 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">Task</th>
+            <th className="text-left px-4 py-2.5 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">Agent</th>
+            <th className="text-left px-4 py-2.5 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">Status</th>
+            <th className="text-left px-4 py-2.5 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">Scheduled</th>
           </tr>
         </thead>
         <tbody>
@@ -285,22 +285,22 @@ function ListView({ tasks, agents }: { tasks: Task[]; agents: Agent[] }) {
               <tr
                 key={task.id}
                 onClick={() => navigate(`/tasks/${task.id}`)}
-                className="border-b border-[#F3F4F6] hover:bg-[#F9FAFB] cursor-pointer transition-colors"
+                className="border-b border-border/50 hover:bg-secondary cursor-pointer transition-colors"
               >
                 <td className="px-4 py-3">
-                  <div className="text-[13px] font-semibold text-[#111827]">{task.title}</div>
-                  {task.description && <div className="text-[12px] text-[#9CA3AF] mt-0.5 line-clamp-1">{task.description}</div>}
+                  <div className="text-[13px] font-semibold text-foreground">{task.title}</div>
+                  {task.description && <div className="text-[12px] text-muted-foreground mt-0.5 line-clamp-1">{task.description}</div>}
                 </td>
                 <td className="px-4 py-3">
                   {agent && (
                     <div className="flex items-center gap-1.5">
                       <AgentBadge agent={agent} size="sm" />
-                      <span className="text-[13px] text-[#374151]">{agent.name}</span>
+                      <span className="text-[13px] text-foreground">{agent.name}</span>
                     </div>
                   )}
                 </td>
                 <td className="px-4 py-3"><StatusBadge status={task.status} /></td>
-                <td className="px-4 py-3 text-[13px] text-[#6B7280]">{formatDateTime(task.scheduled_for)}</td>
+                <td className="px-4 py-3 text-[13px] text-muted-foreground">{formatDateTime(task.scheduled_for)}</td>
               </tr>
             );
           })}
@@ -336,12 +336,12 @@ function TemplatesTab({ templates, agents, globalSearchQuery, onNewTemplate, onE
     <>
       <div className="flex items-center justify-between mb-4 gap-4">
         <div>
-          <h1 className="text-[28px] font-bold text-[#111827]">Templates</h1>
-          <p className="text-[14px] text-[#6B7280]">Reusable blueprints for recurring agent work</p>
+          <h1 className="text-[28px] font-bold text-foreground">Templates</h1>
+          <p className="text-[14px] text-muted-foreground">Reusable blueprints for recurring agent work</p>
         </div>
         <button
           onClick={onNewTemplate}
-          className="h-[36px] px-4 bg-[#2563EB] hover:bg-[#1D4ED8] text-white text-[14px] font-semibold rounded-lg transition-colors"
+          className="h-[36px] px-4 bg-primary hover:opacity-90 text-primary-foreground text-[14px] font-semibold rounded-lg transition-colors"
         >
           + New Template
         </button>
@@ -352,12 +352,12 @@ function TemplatesTab({ templates, agents, globalSearchQuery, onNewTemplate, onE
           value={templateSearch}
           onChange={(e) => setTemplateSearch(e.target.value)}
           placeholder="Search templates"
-          className="h-[36px] w-[280px] px-3 border border-[#E5E7EB] rounded-lg bg-white text-[13px] outline-none focus:border-[#2563EB]"
+          className="h-[36px] w-[280px] px-3 border border-border rounded-lg bg-card text-[13px] outline-none focus:border-primary"
         />
         <select
           value={agentFilter}
           onChange={(e) => setAgentFilter(e.target.value)}
-          className="h-[36px] px-3 text-[13px] border border-[#E5E7EB] rounded-lg bg-white text-[#374151] outline-none"
+          className="h-[36px] px-3 text-[13px] border border-border rounded-lg bg-card text-foreground outline-none"
         >
           <option value="all">All Agents</option>
           {agents.map((a) => <option key={a.id} value={a.id}>{a.avatar} {a.name}</option>)}
@@ -365,27 +365,27 @@ function TemplatesTab({ templates, agents, globalSearchQuery, onNewTemplate, onE
       </div>
 
       {filteredTemplates.length === 0 ? (
-        <div className="bg-white border border-[#E5E7EB] rounded-xl py-12 text-center text-[14px] text-[#9CA3AF]">No templates found</div>
+        <div className="bg-card border border-border rounded-xl py-12 text-center text-[14px] text-muted-foreground">No templates found</div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {filteredTemplates.map((tpl) => {
             const agent = getAgentById(agents, tpl.agent_id);
             return (
-              <div key={tpl.id} className="bg-white border border-[#E5E7EB] rounded-[10px] p-4 shadow-[0_1px_2px_rgba(0,0,0,0.05)] hover:shadow-[0_2px_8px_rgba(0,0,0,0.08)] transition-all">
-                <div className="text-[15px] font-bold text-[#111827] mb-1">{tpl.title}</div>
-                {tpl.description && <div className="text-[13px] text-[#6B7280] line-clamp-2 mb-3">{tpl.description}</div>}
-                {tpl.instructions && <div className="text-[12px] text-[#9CA3AF] line-clamp-3 mb-3">{tpl.instructions}</div>}
+              <div key={tpl.id} className="bg-card border border-border rounded-[10px] p-4 shadow-[0_1px_2px_rgba(0,0,0,0.05)] hover:shadow-[0_2px_8px_rgba(0,0,0,0.08)] transition-all">
+                <div className="text-[15px] font-bold text-foreground mb-1">{tpl.title}</div>
+                {tpl.description && <div className="text-[13px] text-muted-foreground line-clamp-2 mb-3">{tpl.description}</div>}
+                {tpl.instructions && <div className="text-[12px] text-muted-foreground line-clamp-3 mb-3">{tpl.instructions}</div>}
                 <div className="flex items-center justify-between">
                   {agent && (
                     <div className="flex items-center gap-1.5">
                       <AgentBadge agent={agent} size="sm" />
-                      <span className="text-[12px] text-[#6B7280] font-medium">{agent.name}</span>
+                      <span className="text-[12px] text-muted-foreground font-medium">{agent.name}</span>
                     </div>
                   )}
-                  <span className="text-[12px] text-[#9CA3AF]"># {tpl.task_count || 0} tasks</span>
+                  <span className="text-[12px] text-muted-foreground"># {tpl.task_count || 0} tasks</span>
                 </div>
-                <div className="flex gap-3 mt-3 pt-3 border-t border-[#F3F4F6]">
-                  <button onClick={() => onEditTemplate(tpl)} className="text-[12px] text-[#2563EB] hover:text-[#1D4ED8] font-medium">Edit</button>
+                <div className="flex gap-3 mt-3 pt-3 border-t border-border/50">
+                  <button onClick={() => onEditTemplate(tpl)} className="text-[12px] text-primary hover:opacity-80 font-medium">Edit</button>
                   <button
                     onClick={async () => {
                       await createTaskFromTemplate({
@@ -397,7 +397,7 @@ function TemplatesTab({ templates, agents, globalSearchQuery, onNewTemplate, onE
                       });
                       onRefresh();
                     }}
-                    className="text-[12px] text-[#374151] hover:text-[#111827] font-medium"
+                    className="text-[12px] text-foreground hover:opacity-80 font-medium"
                   >
                     Use Template
                   </button>
@@ -408,7 +408,7 @@ function TemplatesTab({ templates, agents, globalSearchQuery, onNewTemplate, onE
                         onRefresh();
                       }
                     }}
-                    className="text-[12px] text-[#EF4444] hover:text-[#DC2626] font-medium"
+                    className="text-[12px] text-destructive hover:opacity-80 font-medium"
                   >
                     Delete
                   </button>
@@ -435,6 +435,7 @@ function RecurringTab({ recurring, agents, globalSearchQuery, onNewRecurring, on
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState(globalSearchQuery);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const navigate = useNavigate();
 
   useEffect(() => setSearch(globalSearchQuery), [globalSearchQuery]);
 
@@ -495,9 +496,7 @@ function RecurringTab({ recurring, agents, globalSearchQuery, onNewRecurring, on
       const h = parseInt(hour);
       const m = parseInt(min);
       if (!isNaN(h) && !isNaN(m) && dom === '*' && mon === '*' && dow === '*') {
-        // Daily cron - show in target timezone
         if (tz === 'UTC') {
-          // Convert UTC to Europe/Berlin (approx +1/+2)
           const utcDate = new Date();
           utcDate.setUTCHours(h, m, 0, 0);
           const berlinTime = utcDate.toLocaleString('de-DE', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Berlin' });
@@ -532,12 +531,12 @@ function RecurringTab({ recurring, agents, globalSearchQuery, onNewRecurring, on
     <>
       <div className="flex items-center justify-between mb-4 gap-4">
         <div>
-          <h1 className="text-[28px] font-bold text-[#111827]">Recurring Schedules</h1>
-          <p className="text-[14px] text-[#6B7280]">Live cron jobs from OpenClaw · {cronJobs.length} total</p>
+          <h1 className="text-[28px] font-bold text-foreground">Recurring Schedules</h1>
+          <p className="text-[14px] text-muted-foreground">Live cron jobs from OpenClaw · {cronJobs.length} total</p>
         </div>
         <button
           onClick={loadCronJobs}
-          className="h-[36px] px-4 bg-white border border-[#E5E7EB] hover:bg-[#F9FAFB] text-[#374151] text-[14px] font-medium rounded-lg transition-colors"
+          className="h-[36px] px-4 bg-card border border-border hover:bg-secondary text-foreground text-[14px] font-medium rounded-lg transition-colors"
         >
           ↻ Refresh
         </button>
@@ -548,73 +547,71 @@ function RecurringTab({ recurring, agents, globalSearchQuery, onNewRecurring, on
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Search cron jobs"
-          className="h-[36px] w-[280px] px-3 border border-[#E5E7EB] rounded-lg bg-white text-[13px] outline-none focus:border-[#2563EB]"
+          className="h-[36px] w-[280px] px-3 border border-border rounded-lg bg-card text-[13px] outline-none focus:border-primary"
         />
       </div>
 
       {error && (
-        <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-[13px] text-red-700">{error}</div>
+        <div className="mb-4 p-3 bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 rounded-lg text-[13px] text-red-700 dark:text-red-300">{error}</div>
       )}
 
       {loading ? (
-        <div className="py-12 text-center text-[14px] text-[#9CA3AF]">Loading cron jobs...</div>
+        <div className="py-12 text-center text-[14px] text-muted-foreground">Loading cron jobs...</div>
       ) : (
-        <div className="bg-white border border-[#E5E7EB] rounded-xl overflow-hidden">
+        <div className="bg-card border border-border rounded-xl overflow-hidden">
           {filteredJobs.map((job, idx) => (
             <div
               key={job.id}
-              className={`px-4 py-4 hover:bg-[#F9FAFB] transition-colors ${
-                idx < filteredJobs.length - 1 ? 'border-b border-[#F3F4F6]' : ''
+              className={`px-4 py-4 hover:bg-secondary transition-colors cursor-pointer ${
+                idx < filteredJobs.length - 1 ? 'border-b border-border/50' : ''
               }`}
+              onClick={() => navigate(`/cron/${job.id}`)}
             >
               <div className="flex items-center gap-4">
-                <div className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${job.enabled ? 'bg-[#10B981]' : 'bg-[#D1D5DB]'}`} />
+                <div className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${job.enabled ? 'bg-emerald-500' : 'bg-gray-300 dark:bg-gray-600'}`} />
                 <div className="flex-1 min-w-0">
-                  <div className="text-[15px] font-bold text-[#111827]">{job.name}</div>
-                  <div className="text-[13px] text-[#6B7280]">{formatCronSchedule(job.schedule)}</div>
+                  <div className="text-[15px] font-bold text-foreground">{job.name}</div>
+                  <div className="text-[13px] text-muted-foreground">{formatCronSchedule(job.schedule)}</div>
                 </div>
-                <div className="flex items-center gap-3 flex-shrink-0">
-                  {/* Toggle button */}
+                <div className="flex items-center gap-3 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
                   <button
                     onClick={() => handleToggle(job)}
                     disabled={actionLoading === job.id}
                     title={job.enabled ? 'Pause' : 'Resume'}
                     className={`w-[32px] h-[32px] flex items-center justify-center rounded-lg transition-colors ${
                       job.enabled
-                        ? 'text-[#F59E0B] hover:bg-amber-50'
-                        : 'text-[#10B981] hover:bg-green-50'
+                        ? 'text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-950'
+                        : 'text-emerald-500 hover:bg-green-50 dark:hover:bg-green-950'
                     } ${actionLoading === job.id ? 'opacity-50' : ''}`}
                   >
                     {job.enabled ? '⏸' : '▶️'}
                   </button>
-                  {/* Delete button */}
                   <button
                     onClick={() => handleDelete(job)}
                     disabled={actionLoading === job.id}
                     title="Delete"
-                    className={`w-[32px] h-[32px] flex items-center justify-center rounded-lg text-[#EF4444] hover:bg-red-50 transition-colors ${actionLoading === job.id ? 'opacity-50' : ''}`}
+                    className={`w-[32px] h-[32px] flex items-center justify-center rounded-lg text-destructive hover:bg-red-50 dark:hover:bg-red-950 transition-colors ${actionLoading === job.id ? 'opacity-50' : ''}`}
                   >
                     🗑
                   </button>
                 </div>
               </div>
-              {/* Details row */}
               <div className="flex items-center gap-4 mt-2 ml-[26px] flex-wrap">
-                <div className="text-[12px] text-[#9CA3AF]">
-                  Next: <span className="text-[#374151]">{formatBerlinDate(job.nextRunAt)}</span>
+                <div className="text-[12px] text-muted-foreground">
+                  Next: <span className="text-foreground">{formatBerlinDate(job.nextRunAt)}</span>
                 </div>
-                <div className="text-[12px] text-[#9CA3AF]">
-                  Last: <span className="text-[#374151]">{formatBerlinDate(job.lastRunAt)}</span>
+                <div className="text-[12px] text-muted-foreground">
+                  Last: <span className="text-foreground">{formatBerlinDate(job.lastRunAt)}</span>
                   {job.lastStatus && (
                     <span className={`ml-1.5 inline-flex items-center px-1.5 py-0.5 rounded text-[11px] font-medium ${
-                      job.lastStatus === 'ok' ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'
+                      job.lastStatus === 'ok' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900 dark:text-emerald-300' : 'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300'
                     }`}>
                       {job.lastStatus}
                     </span>
                   )}
                 </div>
-                <div className="text-[12px] text-[#9CA3AF]">
-                  Duration: <span className="text-[#374151]">{formatDuration(job.lastDurationMs)}</span>
+                <div className="text-[12px] text-muted-foreground">
+                  Duration: <span className="text-foreground">{formatDuration(job.lastDurationMs)}</span>
                 </div>
                 {job.consecutiveErrors > 0 && (
                   <div className="text-[12px] text-red-500 font-medium">
@@ -623,14 +620,14 @@ function RecurringTab({ recurring, agents, globalSearchQuery, onNewRecurring, on
                 )}
               </div>
               {job.payload && (
-                <div className="mt-1.5 ml-[26px] text-[12px] text-[#9CA3AF] line-clamp-1" title={job.payload}>
+                <div className="mt-1.5 ml-[26px] text-[12px] text-muted-foreground line-clamp-1" title={job.payload}>
                   💬 {job.payload}
                 </div>
               )}
             </div>
           ))}
           {filteredJobs.length === 0 && !loading && (
-            <div className="py-12 text-center text-[14px] text-[#9CA3AF]">No cron jobs found</div>
+            <div className="py-12 text-center text-[14px] text-muted-foreground">No cron jobs found</div>
           )}
         </div>
       )}
@@ -642,30 +639,30 @@ function ArchivedTab({ tasks, agents }: { tasks: Task[]; agents: Agent[] }) {
   const navigate = useNavigate();
   return (
     <>
-      <h1 className="text-[28px] font-bold text-[#111827] mb-4">Archived Tasks</h1>
+      <h1 className="text-[28px] font-bold text-foreground mb-4">Archived Tasks</h1>
       {tasks.length === 0 ? (
-        <div className="bg-white border border-[#E5E7EB] rounded-xl py-12 text-center text-[14px] text-[#9CA3AF]">No archived tasks</div>
+        <div className="bg-card border border-border rounded-xl py-12 text-center text-[14px] text-muted-foreground">No archived tasks</div>
       ) : (
-        <div className="bg-white border border-[#E5E7EB] rounded-xl overflow-hidden">
+        <div className="bg-card border border-border rounded-xl overflow-hidden">
           {tasks.map((task, idx) => {
             const agent = getAgentById(agents, task.agent_id);
             return (
               <div
                 key={task.id}
                 onClick={() => navigate(`/tasks/${task.id}`)}
-                className={`flex items-center gap-3 px-4 py-3 hover:bg-[#F9FAFB] cursor-pointer transition-colors ${idx < tasks.length - 1 ? 'border-b border-[#F3F4F6]' : ''}`}
+                className={`flex items-center gap-3 px-4 py-3 hover:bg-secondary cursor-pointer transition-colors ${idx < tasks.length - 1 ? 'border-b border-border/50' : ''}`}
               >
                 <div className="flex-1">
-                  <div className="text-[14px] font-semibold text-[#374151]">{task.title}</div>
-                  {task.description && <div className="text-[12px] text-[#9CA3AF] mt-0.5">{task.description}</div>}
+                  <div className="text-[14px] font-semibold text-foreground">{task.title}</div>
+                  {task.description && <div className="text-[12px] text-muted-foreground mt-0.5">{task.description}</div>}
                 </div>
                 {agent && (
                   <div className="flex items-center gap-1">
                     <AgentBadge agent={agent} size="sm" />
-                    <span className="text-[12px] text-[#6B7280]">{agent.name}</span>
+                    <span className="text-[12px] text-muted-foreground">{agent.name}</span>
                   </div>
                 )}
-                <span className="text-[12px] text-[#9CA3AF]">{formatDateTime(task.archived_at)}</span>
+                <span className="text-[12px] text-muted-foreground">{formatDateTime(task.archived_at)}</span>
               </div>
             );
           })}
@@ -906,7 +903,7 @@ function EditRecurringModal({ open, recurring, onClose, agents, onSaved }: {
 function Field({ label, children, className = '' }: { label: string; children: ReactNode; className?: string }) {
   return (
     <div className={className}>
-      <label className="block text-[13px] font-medium text-[#374151] mb-1">{label}</label>
+      <label className="block text-[13px] font-medium text-foreground mb-1">{label}</label>
       {children}
     </div>
   );
@@ -921,8 +918,8 @@ function ModalActions({ onClose, onSubmit, loading, submitLabel, disabled }: {
 }) {
   return (
     <div className="flex justify-end gap-2 pt-2">
-      <button onClick={onClose} className="px-4 py-2 text-[13px] font-medium text-[#6B7280] hover:text-[#374151]">Cancel</button>
-      <button onClick={onSubmit} disabled={loading || disabled} className="px-4 py-2 bg-[#2563EB] hover:bg-[#1D4ED8] disabled:opacity-50 text-white text-[13px] font-semibold rounded-lg">
+      <button onClick={onClose} className="px-4 py-2 text-[13px] font-medium text-muted-foreground hover:text-foreground">Cancel</button>
+      <button onClick={onSubmit} disabled={loading || disabled} className="px-4 py-2 bg-primary hover:opacity-90 disabled:opacity-50 text-primary-foreground text-[13px] font-semibold rounded-lg">
         {loading ? 'Saving...' : submitLabel}
       </button>
     </div>
@@ -936,5 +933,5 @@ function toDateTimeLocal(value: string | null) {
   return local.toISOString().slice(0, 16);
 }
 
-const inputClass = 'w-full h-[36px] px-3 border border-[#E5E7EB] rounded-lg text-[13px] outline-none focus:border-[#2563EB]';
-const textareaClass = 'w-full px-3 py-2 border border-[#E5E7EB] rounded-lg text-[13px] outline-none focus:border-[#2563EB] resize-none';
+const inputClass = 'w-full h-[36px] px-3 border border-border rounded-lg bg-card text-[13px] text-foreground outline-none focus:border-primary';
+const textareaClass = 'w-full px-3 py-2 border border-border rounded-lg bg-card text-[13px] text-foreground outline-none focus:border-primary resize-none';

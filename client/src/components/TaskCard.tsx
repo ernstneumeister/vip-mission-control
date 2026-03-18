@@ -18,24 +18,24 @@ export default function TaskCard({ task, agents, showAgent = false, showStatus =
   return (
     <div
       onClick={() => navigate(`/tasks/${task.id}`)}
-      className="bg-white border border-[#E5E7EB] rounded-[10px] p-3 shadow-[0_1px_2px_rgba(0,0,0,0.05)] mb-2 cursor-pointer hover:shadow-[0_2px_8px_rgba(0,0,0,0.08)] hover:border-[#D1D5DB] transition-all group"
+      className="bg-card border border-border rounded-[10px] p-3 shadow-[0_1px_2px_rgba(0,0,0,0.05)] mb-2 cursor-pointer hover:shadow-[0_2px_8px_rgba(0,0,0,0.08)] hover:border-muted-foreground/30 transition-all group"
     >
-      <div className="text-[13px] font-semibold text-[#111827] group-hover:text-[#2563EB] transition-colors leading-snug">
+      <div className="text-[13px] font-semibold text-foreground group-hover:text-primary transition-colors leading-snug">
         {task.title}
       </div>
       {task.description && (
-        <div className="text-[12px] text-[#6B7280] mt-1 line-clamp-1">{task.description}</div>
+        <div className="text-[12px] text-muted-foreground mt-1 line-clamp-1">{task.description}</div>
       )}
       <div className="flex items-center gap-2 mt-2">
         {showAgent && agent && (
           <div className="flex items-center gap-1">
             <AgentBadge agent={agent} size="sm" />
-            <span className="text-[11px] text-[#6B7280] font-medium">{agent.name}</span>
+            <span className="text-[11px] text-muted-foreground font-medium">{agent.name}</span>
           </div>
         )}
         {showStatus && <StatusBadge status={task.status} />}
         {task.scheduled_for && (
-          <span className="text-[11px] text-[#9CA3AF] ml-auto">{formatDateTime(task.scheduled_for)}</span>
+          <span className="text-[11px] text-muted-foreground ml-auto">{formatDateTime(task.scheduled_for)}</span>
         )}
       </div>
     </div>
