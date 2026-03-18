@@ -44,6 +44,21 @@ export interface Recurring {
   created_at: string;
 }
 
+export interface CronJob {
+  id: string;
+  name: string;
+  enabled: boolean;
+  schedule: { kind: string; expr: string; tz: string };
+  sessionTarget: string;
+  lastStatus: string | null;
+  lastRunAt: string | null;
+  nextRunAt: string | null;
+  lastDurationMs: number | null;
+  consecutiveErrors: number;
+  createdAt: string | null;
+  payload: string;
+}
+
 export interface ActivityLog {
   id: number;
   task_id: number;

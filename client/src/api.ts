@@ -1,4 +1,4 @@
-import type { Agent, Task, Template, Recurring, ActivityLog } from './types';
+import type { Agent, Task, Template, Recurring, ActivityLog, CronJob } from './types';
 
 const BASE = '/api';
 
@@ -48,6 +48,12 @@ export const updateRecurring = (id: number, data: Partial<Recurring>) =>
   fetchJSON<Recurring>(`/recurring/${id}`, { method: 'PUT', body: JSON.stringify(data) });
 export const deleteRecurring = (id: number) =>
   fetchJSON<{ success: boolean }>(`/recurring/${id}`, { method: 'DELETE' });
+
+// Cron (OpenClaw)
+export const getCronJobs = () => fetchJSON<CronJob[]>('/cron');
+export const enableCronJob = (id: string) => fetchJSON<{success: boolean}>(`/cron/${id}/enable`, { method: 'POST' });
+export const disableCronJob = (id: string) => fetchJSON<{success: boolean}>(`/cron/${id}/disable`, { method: 'POST' });
+export const deleteCronJob = (id: string) => fetchJSON<{success: boolean}>(`/cron/${id}`, { method: 'DELETE' });
 
 // Activity
 export const getActivity = (taskId: number) => fetchJSON<ActivityLog[]>(`/activity/${taskId}`);

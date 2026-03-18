@@ -3,6 +3,7 @@ import cors from 'cors';
 import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
+import { execSync } from 'child_process';
 import multer from 'multer';
 import db from './db.js';
 
@@ -252,6 +253,58 @@ app.delete('/api/recurring/:id', (req, res) => {
   const result = db.prepare('DELETE FROM recurring WHERE id = ?').run(req.params.id);
   if (result.changes === 0) return res.status(404).json({ error: 'Not found' });
   res.json({ success: true });
+});
+
+// ─── Cron (OpenClaw) ───
+app.get('/api/cron', (req, res) => {
+  try {
+    const output = execSync('openclaw cron list --json', { encoding: 'utf-8', timeout: 10000 });
+    const data = JSON.parse(output);
+    const jobs = (data.jobs || []).map(job => ({
+      id: job.id,
+      name: job.name,
+      enabled: job.enabled,
+      schedule: job.schedule,
+      sessionTarget: job.sessionTarget,
+      lastStatus: job.state?.lastStatus || null,
+      lastRunAt: job.state?.lastRunAtMs ? new Date(job.state.lastRunAtMs).toISOString() : null,
+      nextRunAt: job.state?.nextRunAtMs ? new Date(job.state.nextRunAtMs).toISOString() : null,
+      lastDurationMs: job.state?.lastDurationMs || null,
+      consecutiveErrors: job.state?.consecutiveErrors || 0,
+      createdAt: job.createdAtMs ? new Date(job.createdAtMs).toISOString() : null,
+      payload: job.payload?.text || job.payload?.message || '',
+    }));
+    res.json(jobs);
+  } catch(e) {
+    res.status(500).json({ error: 'Failed to fetch cron jobs: ' + e.message });
+  }
+});
+
+app.post('/api/cron/:id/enable', (req, res) => {
+  try {
+    execSync(`openclaw cron enable ${req.params.id}`, { encoding: 'utf-8', timeout: 10000 });
+    res.json({ success: true });
+  } catch(e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.post('/api/cron/:id/disable', (req, res) => {
+  try {
+    execSync(`openclaw cron disable ${req.params.id}`, { encoding: 'utf-8', timeout: 10000 });
+    res.json({ success: true });
+  } catch(e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.delete('/api/cron/:id', (req, res) => {
+  try {
+    execSync(`openclaw cron rm ${req.params.id}`, { encoding: 'utf-8', timeout: 10000 });
+    res.json({ success: true });
+  } catch(e) {
+    res.status(500).json({ error: e.message });
+  }
 });
 
 // ─── Activity Log ───

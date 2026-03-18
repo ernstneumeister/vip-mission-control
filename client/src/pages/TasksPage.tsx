@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useMemo, type ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
-import type { Agent, Task, Template, Recurring } from '../types';
-import { getTasks, getTemplates, getRecurring, createTask, createTemplate, createRecurring, updateRecurring, deleteRecurring, deleteTemplate, updateTemplate, createTask as createTaskFromTemplate } from '../api';
+import type { Agent, Task, Template, Recurring, CronJob } from '../types';
+import { getTasks, getTemplates, getRecurring, createTask, createTemplate, createRecurring, updateRecurring, deleteRecurring, deleteTemplate, updateTemplate, createTask as createTaskFromTemplate, getCronJobs, enableCronJob, disableCronJob, deleteCronJob } from '../api';
 import TaskCard from '../components/TaskCard';
 import StatusBadge from '../components/StatusBadge';
 import AgentBadge from '../components/AgentBadge';
@@ -430,27 +430,116 @@ function RecurringTab({ recurring, agents, globalSearchQuery, onNewRecurring, on
   onEditRecurring: (item: Recurring) => void;
   onRefresh: () => void;
 }) {
+  const [cronJobs, setCronJobs] = useState<CronJob[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState(globalSearchQuery);
+  const [actionLoading, setActionLoading] = useState<string | null>(null);
 
   useEffect(() => setSearch(globalSearchQuery), [globalSearchQuery]);
 
-  const filteredRecurring = useMemo(() => {
+  const loadCronJobs = useCallback(async () => {
+    try {
+      setError(null);
+      const jobs = await getCronJobs();
+      setCronJobs(jobs);
+    } catch (e: any) {
+      setError(e.message || 'Failed to load cron jobs');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => { loadCronJobs(); }, [loadCronJobs]);
+
+  const filteredJobs = useMemo(() => {
     const needle = search.trim().toLowerCase();
-    return recurring.filter((item) => !needle || [item.title, item.cron_expr, item.timezone].some((value) => value.toLowerCase().includes(needle)));
-  }, [recurring, search]);
+    return cronJobs.filter((job) => !needle || [job.name, job.payload, job.schedule?.expr, job.schedule?.tz].some((v) => (v || '').toLowerCase().includes(needle)));
+  }, [cronJobs, search]);
+
+  const handleToggle = async (job: CronJob) => {
+    setActionLoading(job.id);
+    try {
+      if (job.enabled) {
+        await disableCronJob(job.id);
+      } else {
+        await enableCronJob(job.id);
+      }
+      await loadCronJobs();
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleDelete = async (job: CronJob) => {
+    if (!confirm(`Delete cron job "${job.name}"?`)) return;
+    setActionLoading(job.id);
+    try {
+      await deleteCronJob(job.id);
+      await loadCronJobs();
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const formatCronSchedule = (schedule: CronJob['schedule']): string => {
+    if (!schedule) return '—';
+    const { expr, tz } = schedule;
+    const parts = expr.split(' ');
+    if (parts.length >= 5) {
+      const [min, hour, dom, mon, dow] = parts;
+      const h = parseInt(hour);
+      const m = parseInt(min);
+      if (!isNaN(h) && !isNaN(m) && dom === '*' && mon === '*' && dow === '*') {
+        // Daily cron - show in target timezone
+        if (tz === 'UTC') {
+          // Convert UTC to Europe/Berlin (approx +1/+2)
+          const utcDate = new Date();
+          utcDate.setUTCHours(h, m, 0, 0);
+          const berlinTime = utcDate.toLocaleString('de-DE', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Berlin' });
+          return `Täglich um ${berlinTime} (Europe/Berlin)`;
+        }
+        return `Täglich um ${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+      }
+    }
+    return `Cron: ${expr} (${tz})`;
+  };
+
+  const formatBerlinDate = (iso: string | null): string => {
+    if (!iso) return '—';
+    return new Date(iso).toLocaleString('de-DE', {
+      day: '2-digit', month: '2-digit', year: 'numeric',
+      hour: '2-digit', minute: '2-digit',
+      timeZone: 'Europe/Berlin',
+    });
+  };
+
+  const formatDuration = (ms: number | null): string => {
+    if (!ms) return '—';
+    if (ms < 1000) return `${ms}ms`;
+    const seconds = ms / 1000;
+    if (seconds < 60) return `${seconds.toFixed(1)}s`;
+    const minutes = Math.floor(seconds / 60);
+    const secs = Math.round(seconds % 60);
+    return `${minutes}m ${secs}s`;
+  };
 
   return (
     <>
       <div className="flex items-center justify-between mb-4 gap-4">
         <div>
           <h1 className="text-[28px] font-bold text-[#111827]">Recurring Schedules</h1>
-          <p className="text-[14px] text-[#6B7280]">Cron-based schedules that generate ongoing work</p>
+          <p className="text-[14px] text-[#6B7280]">Live cron jobs from OpenClaw · {cronJobs.length} total</p>
         </div>
         <button
-          onClick={onNewRecurring}
-          className="h-[36px] px-4 bg-[#2563EB] hover:bg-[#1D4ED8] text-white text-[14px] font-semibold rounded-lg transition-colors"
+          onClick={loadCronJobs}
+          className="h-[36px] px-4 bg-white border border-[#E5E7EB] hover:bg-[#F9FAFB] text-[#374151] text-[14px] font-medium rounded-lg transition-colors"
         >
-          + New Schedule
+          ↻ Refresh
         </button>
       </div>
 
@@ -458,61 +547,93 @@ function RecurringTab({ recurring, agents, globalSearchQuery, onNewRecurring, on
         <input
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search schedules"
+          placeholder="Search cron jobs"
           className="h-[36px] w-[280px] px-3 border border-[#E5E7EB] rounded-lg bg-white text-[13px] outline-none focus:border-[#2563EB]"
         />
       </div>
 
-      <div className="bg-white border border-[#E5E7EB] rounded-xl overflow-hidden">
-        {filteredRecurring.map((item, idx) => {
-          const agent = getAgentById(agents, item.agent_id);
-          return (
+      {error && (
+        <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-[13px] text-red-700">{error}</div>
+      )}
+
+      {loading ? (
+        <div className="py-12 text-center text-[14px] text-[#9CA3AF]">Loading cron jobs...</div>
+      ) : (
+        <div className="bg-white border border-[#E5E7EB] rounded-xl overflow-hidden">
+          {filteredJobs.map((job, idx) => (
             <div
-              key={item.id}
-              className={`flex items-center gap-4 px-4 py-4 hover:bg-[#F9FAFB] transition-colors ${
-                idx < filteredRecurring.length - 1 ? 'border-b border-[#F3F4F6]' : ''
+              key={job.id}
+              className={`px-4 py-4 hover:bg-[#F9FAFB] transition-colors ${
+                idx < filteredJobs.length - 1 ? 'border-b border-[#F3F4F6]' : ''
               }`}
             >
-              <div className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${item.active ? 'bg-[#10B981]' : 'bg-[#D1D5DB]'}`} />
-              <div className="flex-1 min-w-0">
-                <div className="text-[15px] font-bold text-[#111827]">{item.title}</div>
-                <div className="text-[13px] text-[#6B7280]">{cronToHuman(item.cron_expr, item.timezone)}</div>
+              <div className="flex items-center gap-4">
+                <div className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${job.enabled ? 'bg-[#10B981]' : 'bg-[#D1D5DB]'}`} />
+                <div className="flex-1 min-w-0">
+                  <div className="text-[15px] font-bold text-[#111827]">{job.name}</div>
+                  <div className="text-[13px] text-[#6B7280]">{formatCronSchedule(job.schedule)}</div>
+                </div>
+                <div className="flex items-center gap-3 flex-shrink-0">
+                  {/* Toggle button */}
+                  <button
+                    onClick={() => handleToggle(job)}
+                    disabled={actionLoading === job.id}
+                    title={job.enabled ? 'Pause' : 'Resume'}
+                    className={`w-[32px] h-[32px] flex items-center justify-center rounded-lg transition-colors ${
+                      job.enabled
+                        ? 'text-[#F59E0B] hover:bg-amber-50'
+                        : 'text-[#10B981] hover:bg-green-50'
+                    } ${actionLoading === job.id ? 'opacity-50' : ''}`}
+                  >
+                    {job.enabled ? '⏸' : '▶️'}
+                  </button>
+                  {/* Delete button */}
+                  <button
+                    onClick={() => handleDelete(job)}
+                    disabled={actionLoading === job.id}
+                    title="Delete"
+                    className={`w-[32px] h-[32px] flex items-center justify-center rounded-lg text-[#EF4444] hover:bg-red-50 transition-colors ${actionLoading === job.id ? 'opacity-50' : ''}`}
+                  >
+                    🗑
+                  </button>
+                </div>
               </div>
-              {agent && (
-                <div className="flex items-center gap-1.5 flex-shrink-0">
-                  <AgentBadge agent={agent} size="sm" />
-                  <span className="text-[12px] text-[#6B7280]">{agent.name}</span>
+              {/* Details row */}
+              <div className="flex items-center gap-4 mt-2 ml-[26px] flex-wrap">
+                <div className="text-[12px] text-[#9CA3AF]">
+                  Next: <span className="text-[#374151]">{formatBerlinDate(job.nextRunAt)}</span>
+                </div>
+                <div className="text-[12px] text-[#9CA3AF]">
+                  Last: <span className="text-[#374151]">{formatBerlinDate(job.lastRunAt)}</span>
+                  {job.lastStatus && (
+                    <span className={`ml-1.5 inline-flex items-center px-1.5 py-0.5 rounded text-[11px] font-medium ${
+                      job.lastStatus === 'ok' ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'
+                    }`}>
+                      {job.lastStatus}
+                    </span>
+                  )}
+                </div>
+                <div className="text-[12px] text-[#9CA3AF]">
+                  Duration: <span className="text-[#374151]">{formatDuration(job.lastDurationMs)}</span>
+                </div>
+                {job.consecutiveErrors > 0 && (
+                  <div className="text-[12px] text-red-500 font-medium">
+                    ⚠ {job.consecutiveErrors} consecutive error{job.consecutiveErrors > 1 ? 's' : ''}
+                  </div>
+                )}
+              </div>
+              {job.payload && (
+                <div className="mt-1.5 ml-[26px] text-[12px] text-[#9CA3AF] line-clamp-1" title={job.payload}>
+                  💬 {job.payload}
                 </div>
               )}
-              {item.next_run && <div className="text-[12px] text-[#9CA3AF] flex-shrink-0 whitespace-nowrap">Next: {formatShortDate(item.next_run)}</div>}
-              <div className="flex items-center gap-2 flex-shrink-0">
-                <button onClick={() => onEditRecurring(item)} className="text-[12px] text-[#2563EB] hover:text-[#1D4ED8] font-medium px-2 py-1 rounded">Edit</button>
-                <button
-                  onClick={async () => {
-                    await updateRecurring(item.id, { active: item.active ? 0 : 1 } as Partial<Recurring>);
-                    onRefresh();
-                  }}
-                  className={`text-[12px] font-medium px-2 py-1 rounded ${item.active ? 'text-[#EF4444] hover:bg-red-50' : 'text-[#10B981] hover:bg-green-50'}`}
-                >
-                  {item.active ? 'Pause' : 'Resume'}
-                </button>
-                <button
-                  onClick={async () => {
-                    if (confirm('Delete this schedule?')) {
-                      await deleteRecurring(item.id);
-                      onRefresh();
-                    }
-                  }}
-                  className="text-[12px] text-[#9CA3AF] hover:text-[#EF4444] font-medium px-2 py-1 rounded hover:bg-red-50"
-                >
-                  Delete
-                </button>
-              </div>
             </div>
-          );
-        })}
-        {filteredRecurring.length === 0 && <div className="py-12 text-center text-[14px] text-[#9CA3AF]">No recurring schedules</div>}
-      </div>
+          ))}
+          {filteredJobs.length === 0 && !loading && (
+            <div className="py-12 text-center text-[14px] text-[#9CA3AF]">No cron jobs found</div>
+          )}
+        </div>
+      )}
     </>
   );
 }
