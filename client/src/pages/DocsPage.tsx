@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import MDEditor from '@uiw/react-md-editor';
+import TipTapEditor from '../components/TipTapEditor';
 import { getDocTree, getDocFile, saveDocFile } from '../api';
 import { Folder, FolderOpen, File, FileCode, FileText, Settings as GearIcon, Pin } from '../components/Icons';
 
@@ -94,19 +94,9 @@ export default function DocsPage() {
   const [lastSaved, setLastSaved] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [treeLoading, setTreeLoading] = useState(true);
-  const [darkMode, setDarkMode] = useState(document.documentElement.classList.contains('dark'));
   const editorRef = useRef<HTMLDivElement>(null);
 
   const isDirty = content !== originalContent;
-
-  // Track dark mode changes
-  useEffect(() => {
-    const observer = new MutationObserver(() => {
-      setDarkMode(document.documentElement.classList.contains('dark'));
-    });
-    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
-    return () => observer.disconnect();
-  }, []);
 
   // Load tree
   useEffect(() => {
@@ -280,19 +270,15 @@ export default function DocsPage() {
             </div>
 
             {/* Editor */}
-            <div className="flex-1 overflow-auto" data-color-mode={darkMode ? 'dark' : 'light'}>
+            <div className="flex-1 overflow-hidden">
               {loading ? (
                 <div className="flex items-center justify-center h-full text-muted-foreground">
                   Loading…
                 </div>
               ) : (
-                <MDEditor
-                  value={content}
-                  onChange={(val) => setContent(val || '')}
-                  height="100%"
-                  visibleDragbar={false}
-                  preview="live"
-                  style={{ height: '100%' }}
+                <TipTapEditor
+                  content={content}
+                  onChange={(md) => setContent(md)}
                 />
               )}
             </div>
