@@ -18,7 +18,7 @@ export default function TaskCard({ task, agents, showAgent = false, showStatus =
   return (
     <div
       onClick={() => navigate(`/tasks/${task.id}`)}
-      className="bg-card border border-border rounded-[10px] p-3 shadow-[0_1px_2px_rgba(0,0,0,0.05)] mb-2 cursor-pointer hover:shadow-[0_2px_8px_rgba(0,0,0,0.08)] hover:border-muted-foreground/30 transition-all group"
+      className="bg-card border border-border rounded-xl p-3 shadow-[0_1px_2px_rgba(0,0,0,0.05)] mb-2 cursor-pointer hover:shadow-[0_2px_8px_rgba(0,0,0,0.08)] hover:border-muted-foreground/30 transition-all group"
     >
       <div className="text-[13px] font-semibold text-foreground group-hover:text-primary transition-colors leading-snug">
         {task.title}

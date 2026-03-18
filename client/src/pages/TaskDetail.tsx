@@ -3,6 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import type { Agent, Task, ActivityLog } from '../types';
 import { getTask, updateTask, deleteTask, getActivity, getAgents, uploadAgentAvatar } from '../api';
 import AgentBadge from '../components/AgentBadge';
+import { Zap } from '../components/Icons';
 import { formatDate, formatDateTime, getAgentById, STATUS_LABELS } from '../utils';
 
 interface Props {
@@ -289,7 +290,7 @@ export default function TaskDetail({ agents }: Props) {
                         {logAgent ? (
                           <AgentBadge agent={logAgent} size="sm" />
                         ) : (
-                          <div className="w-5 h-5 rounded bg-muted flex items-center justify-center text-[10px] text-muted-foreground">⚡</div>
+                          <div className="w-5 h-5 rounded bg-muted flex items-center justify-center text-muted-foreground"><Zap size={12} /></div>
                         )}
                       </div>
                       <div className="flex-1 min-w-0">

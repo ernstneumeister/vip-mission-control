@@ -6,6 +6,8 @@ import TaskCard from '../components/TaskCard';
 import StatusBadge from '../components/StatusBadge';
 import AgentBadge from '../components/AgentBadge';
 import Modal from '../components/Modal';
+import SearchInput from '../components/SearchInput';
+import { User, Grid, List, Pause, Play, Trash, RefreshCw, MessageSquare } from '../components/Icons';
 import { STATUS_LABELS, STATUS_COLORS, cronToHuman, formatShortDate, formatDateTime, getAgentById } from '../utils';
 
 interface Props {
@@ -183,9 +185,9 @@ function TasksTab({ tasks, agents, viewMode, setViewMode, agentFilter, setAgentF
           )}
           <div className="flex border border-border rounded-lg overflow-hidden">
             {[
-              { mode: 'agent' as ViewMode, icon: '👤', title: 'By Agent' },
-              { mode: 'status' as ViewMode, icon: '📊', title: 'By Status' },
-              { mode: 'list' as ViewMode, icon: '📋', title: 'List' },
+              { mode: 'agent' as ViewMode, icon: <User size={14} />, title: 'By Agent' },
+              { mode: 'status' as ViewMode, icon: <Grid size={14} />, title: 'By Status' },
+              { mode: 'list' as ViewMode, icon: <List size={14} />, title: 'List' },
             ].map((v) => (
               <button
                 key={v.mode}
@@ -348,11 +350,11 @@ function TemplatesTab({ templates, agents, globalSearchQuery, onNewTemplate, onE
       </div>
 
       <div className="flex items-center gap-3 mb-4">
-        <input
+        <SearchInput
           value={templateSearch}
-          onChange={(e) => setTemplateSearch(e.target.value)}
+          onChange={setTemplateSearch}
           placeholder="Search templates"
-          className="h-[36px] w-[280px] px-3 border border-border rounded-lg bg-card text-[13px] outline-none focus:border-primary"
+          className="w-[280px]"
         />
         <select
           value={agentFilter}
@@ -371,7 +373,7 @@ function TemplatesTab({ templates, agents, globalSearchQuery, onNewTemplate, onE
           {filteredTemplates.map((tpl) => {
             const agent = getAgentById(agents, tpl.agent_id);
             return (
-              <div key={tpl.id} className="bg-card border border-border rounded-[10px] p-4 shadow-[0_1px_2px_rgba(0,0,0,0.05)] hover:shadow-[0_2px_8px_rgba(0,0,0,0.08)] transition-all">
+              <div key={tpl.id} className="bg-card border border-border rounded-xl p-4 shadow-[0_1px_2px_rgba(0,0,0,0.05)] hover:shadow-[0_2px_8px_rgba(0,0,0,0.08)] transition-all">
                 <div className="text-[15px] font-bold text-foreground mb-1">{tpl.title}</div>
                 {tpl.description && <div className="text-[13px] text-muted-foreground line-clamp-2 mb-3">{tpl.description}</div>}
                 {tpl.instructions && <div className="text-[12px] text-muted-foreground line-clamp-3 mb-3">{tpl.instructions}</div>}
@@ -536,18 +538,18 @@ function RecurringTab({ recurring, agents, globalSearchQuery, onNewRecurring, on
         </div>
         <button
           onClick={loadCronJobs}
-          className="h-[36px] px-4 bg-card border border-border hover:bg-secondary text-foreground text-[14px] font-medium rounded-lg transition-colors"
+          className="h-[36px] px-4 bg-card border border-border hover:bg-secondary text-foreground text-[14px] font-medium rounded-lg transition-colors flex items-center gap-2"
         >
-          ↻ Refresh
+          <RefreshCw size={14} /> Refresh
         </button>
       </div>
 
       <div className="mb-4">
-        <input
+        <SearchInput
           value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          onChange={setSearch}
           placeholder="Search cron jobs"
-          className="h-[36px] w-[280px] px-3 border border-border rounded-lg bg-card text-[13px] outline-none focus:border-primary"
+          className="w-[280px]"
         />
       </div>
 
@@ -584,7 +586,7 @@ function RecurringTab({ recurring, agents, globalSearchQuery, onNewRecurring, on
                         : 'text-emerald-500 hover:bg-green-50 dark:hover:bg-green-950'
                     } ${actionLoading === job.id ? 'opacity-50' : ''}`}
                   >
-                    {job.enabled ? '⏸' : '▶️'}
+                    {job.enabled ? <Pause size={14} /> : <Play size={14} />}
                   </button>
                   <button
                     onClick={() => handleDelete(job)}
@@ -592,7 +594,7 @@ function RecurringTab({ recurring, agents, globalSearchQuery, onNewRecurring, on
                     title="Delete"
                     className={`w-[32px] h-[32px] flex items-center justify-center rounded-lg text-destructive hover:bg-red-50 dark:hover:bg-red-950 transition-colors ${actionLoading === job.id ? 'opacity-50' : ''}`}
                   >
-                    🗑
+                    <Trash size={14} />
                   </button>
                 </div>
               </div>
@@ -620,8 +622,8 @@ function RecurringTab({ recurring, agents, globalSearchQuery, onNewRecurring, on
                 )}
               </div>
               {job.payload && (
-                <div className="mt-1.5 ml-[26px] text-[12px] text-muted-foreground line-clamp-1" title={job.payload}>
-                  💬 {job.payload}
+                <div className="mt-1.5 ml-[26px] text-[12px] text-muted-foreground line-clamp-1 flex items-center gap-1.5" title={job.payload}>
+                  <MessageSquare size={12} /> {job.payload}
                 </div>
               )}
             </div>

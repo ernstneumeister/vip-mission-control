@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import type { CronJobDetail, CronRunEntry, CronRunHistory } from '../types';
 import { getCronJob, getCronRuns, updateCronJob, triggerCronRun, enableCronJob, disableCronJob, deleteCronJob } from '../api';
 import Modal from '../components/Modal';
+import { Edit, Pause, Play, Rocket, Trash, RefreshCw, ArrowLeft } from '../components/Icons';
 
 export default function CronDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -127,8 +128,8 @@ export default function CronDetailPage() {
   if (error || !job) {
     return (
       <div className="p-6">
-        <button onClick={() => navigate('/tasks')} className="text-[14px] text-primary hover:opacity-80 mb-4">
-          ← Back to Recurring
+        <button onClick={() => navigate('/tasks')} className="text-[14px] text-primary hover:opacity-80 mb-4 flex items-center gap-1.5">
+          <ArrowLeft size={14} /> Back to Recurring
         </button>
         <div className="p-4 bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 rounded-lg text-[13px] text-red-700 dark:text-red-300">
           {error || 'Job not found'}
@@ -141,8 +142,8 @@ export default function CronDetailPage() {
     <div className="p-6 max-w-[1200px]">
       {/* Top section */}
       <div className="mb-6">
-        <button onClick={() => navigate('/tasks')} className="text-[14px] text-primary hover:opacity-80 mb-3 inline-block">
-          ← Back to Recurring
+        <button onClick={() => navigate('/tasks')} className="text-[14px] text-primary hover:opacity-80 mb-3 inline-flex items-center gap-1.5">
+          <ArrowLeft size={14} /> Back to Recurring
         </button>
         <div className="flex items-start justify-between gap-4">
           <div className="flex items-center gap-3">
@@ -161,34 +162,34 @@ export default function CronDetailPage() {
           <div className="flex items-center gap-2 flex-shrink-0">
             <button
               onClick={() => setShowEdit(true)}
-              className="h-[36px] px-4 bg-card border border-border hover:bg-secondary text-foreground text-[13px] font-medium rounded-lg transition-colors"
+              className="h-[36px] px-4 bg-card border border-border hover:bg-secondary text-foreground text-[13px] font-medium rounded-lg transition-colors flex items-center gap-1.5"
             >
-              ✏️ Edit
+              <Edit size={14} /> Edit
             </button>
             <button
               onClick={handleToggle}
               disabled={actionLoading}
-              className={`h-[36px] px-4 border text-[13px] font-medium rounded-lg transition-colors ${
+              className={`h-[36px] px-4 border text-[13px] font-medium rounded-lg transition-colors flex items-center gap-1.5 ${
                 job.enabled
                   ? 'bg-amber-50 border-amber-200 text-amber-700 hover:bg-amber-100 dark:bg-amber-950 dark:border-amber-800 dark:text-amber-300'
                   : 'bg-emerald-50 border-emerald-200 text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-950 dark:border-emerald-800 dark:text-emerald-300'
               } ${actionLoading ? 'opacity-50' : ''}`}
             >
-              {job.enabled ? '⏸ Pause' : '▶️ Resume'}
+              {job.enabled ? <><Pause size={14} /> Pause</> : <><Play size={14} /> Resume</>}
             </button>
             <button
               onClick={handleRunNow}
               disabled={actionLoading}
-              className={`h-[36px] px-4 bg-primary hover:opacity-90 text-primary-foreground text-[13px] font-semibold rounded-lg transition-colors ${actionLoading ? 'opacity-50' : ''}`}
+              className={`h-[36px] px-4 bg-primary hover:opacity-90 text-primary-foreground text-[13px] font-semibold rounded-lg transition-colors flex items-center gap-1.5 ${actionLoading ? 'opacity-50' : ''}`}
             >
-              🚀 Run Now
+              <Rocket size={14} /> Run Now
             </button>
             <button
               onClick={handleDelete}
               disabled={actionLoading}
-              className={`h-[36px] px-4 bg-red-50 border border-red-200 text-red-600 hover:bg-red-100 dark:bg-red-950 dark:border-red-800 dark:text-red-400 text-[13px] font-medium rounded-lg transition-colors ${actionLoading ? 'opacity-50' : ''}`}
+              className={`h-[36px] px-4 bg-red-50 border border-red-200 text-red-600 hover:bg-red-100 dark:bg-red-950 dark:border-red-800 dark:text-red-400 text-[13px] font-medium rounded-lg transition-colors flex items-center gap-1.5 ${actionLoading ? 'opacity-50' : ''}`}
             >
-              🗑 Delete
+              <Trash size={14} /> Delete
             </button>
           </div>
         </div>
@@ -298,9 +299,9 @@ export default function CronDetailPage() {
           </h2>
           <button
             onClick={() => { setRunsLoading(true); loadRuns(); }}
-            className="text-[13px] text-primary hover:opacity-80 font-medium"
+            className="text-[13px] text-primary hover:opacity-80 font-medium flex items-center gap-1.5"
           >
-            ↻ Refresh
+            <RefreshCw size={13} /> Refresh
           </button>
         </div>
       </div>

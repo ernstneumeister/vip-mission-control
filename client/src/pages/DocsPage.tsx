@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import MDEditor from '@uiw/react-md-editor';
 import { getDocTree, getDocFile, saveDocFile } from '../api';
+import { Folder, FolderOpen, File, FileCode, FileText, Settings as GearIcon, Pin } from '../components/Icons';
 
 interface TreeNode {
   name: string;
@@ -20,12 +21,12 @@ const PINNED_FILES = [
   { name: 'HEARTBEAT.md', path: 'HEARTBEAT.md' },
 ];
 
-function getFileIcon(name: string): string {
-  if (/\.md$/i.test(name)) return '📄';
-  if (/\.json$/i.test(name)) return '📋';
-  if (/\.(yml|yaml|sh|js|ts|css)$/i.test(name)) return '⚙️';
-  if (/\.txt$/i.test(name)) return '📝';
-  return '📄';
+function FileIcon({ name }: { name: string }) {
+  if (/\.md$/i.test(name)) return <File size={14} />;
+  if (/\.json$/i.test(name)) return <FileText size={14} />;
+  if (/\.(yml|yaml|sh|js|ts|css)$/i.test(name)) return <FileCode size={14} />;
+  if (/\.txt$/i.test(name)) return <FileText size={14} />;
+  return <File size={14} />;
 }
 
 function FileTreeItem({
@@ -59,8 +60,8 @@ function FileTreeItem({
         style={{ paddingLeft: `${depth * 14 + 8}px` }}
         title={node.path}
       >
-        <span className="text-[14px] flex-shrink-0">
-          {isDir ? (isOpen ? '📂' : '📁') : getFileIcon(node.name)}
+        <span className="flex-shrink-0">
+          {isDir ? (isOpen ? <FolderOpen size={14} /> : <Folder size={14} />) : <FileIcon name={node.name} />}
         </span>
         <span className="truncate">{node.name}</span>
       </button>
@@ -93,9 +94,19 @@ export default function DocsPage() {
   const [lastSaved, setLastSaved] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [treeLoading, setTreeLoading] = useState(true);
+  const [darkMode, setDarkMode] = useState(document.documentElement.classList.contains('dark'));
   const editorRef = useRef<HTMLDivElement>(null);
 
   const isDirty = content !== originalContent;
+
+  // Track dark mode changes
+  useEffect(() => {
+    const observer = new MutationObserver(() => {
+      setDarkMode(document.documentElement.classList.contains('dark'));
+    });
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+    return () => observer.disconnect();
+  }, []);
 
   // Load tree
   useEffect(() => {
@@ -183,9 +194,10 @@ export default function DocsPage() {
 
         <div className="flex-1 overflow-y-auto py-1">
           {/* Pinned section */}
-          <div className="px-3 pt-2 pb-1">
+          <div className="px-3 pt-2 pb-1 flex items-center gap-1.5">
+            <Pin size={11} className="text-muted-foreground" />
             <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
-              📌 Pinned
+              Pinned
             </span>
           </div>
           {PINNED_FILES.map((f) => (
@@ -198,7 +210,7 @@ export default function DocsPage() {
                   : 'text-sidebar-foreground hover:bg-sidebar-accent'
               }`}
             >
-              <span className="text-[14px]">📄</span>
+              <span className="flex-shrink-0"><File size={14} /></span>
               <span className="truncate">{f.name}</span>
             </button>
           ))}
@@ -268,7 +280,7 @@ export default function DocsPage() {
             </div>
 
             {/* Editor */}
-            <div className="flex-1 overflow-auto" data-color-mode="light">
+            <div className="flex-1 overflow-auto" data-color-mode={darkMode ? 'dark' : 'light'}>
               {loading ? (
                 <div className="flex items-center justify-center h-full text-muted-foreground">
                   Loading…
@@ -288,7 +300,7 @@ export default function DocsPage() {
         ) : (
           <div className="flex-1 flex items-center justify-center text-muted-foreground">
             <div className="text-center">
-              <div className="text-[48px] mb-3">📝</div>
+              <div className="mb-3"><FileText size={48} className="mx-auto text-muted-foreground/50" /></div>
               <div className="text-[16px] font-medium text-muted-foreground">Select a file to edit</div>
               <div className="text-[13px] mt-1">
                 Browse the file tree or use the pinned files for quick access
