@@ -204,7 +204,7 @@ export default function CronDetailPage() {
     setActionLoading(true);
     try {
       await deleteCronJob(id);
-      navigate('/tasks');
+      navigate('/tasks?tab=recurring');
     } catch (e) {
       console.error(e);
     } finally {
@@ -226,7 +226,7 @@ export default function CronDetailPage() {
   if (error || !job) {
     return (
       <div className="p-6">
-        <button onClick={() => navigate('/tasks')} className="text-[14px] text-primary hover:opacity-80 mb-4 flex items-center gap-1.5">
+        <button onClick={() => navigate('/tasks?tab=recurring')} className="text-[14px] text-primary hover:opacity-80 mb-4 flex items-center gap-1.5">
           <ArrowLeft size={14} /> Zurück zu Recurring
         </button>
         <div className="p-4 bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 rounded-lg text-[13px] text-red-700 dark:text-red-300">
@@ -245,7 +245,7 @@ export default function CronDetailPage() {
       {/* Header with back + action buttons */}
       <div className="mb-6">
         <div className="flex items-center justify-between mb-4">
-          <button onClick={() => navigate('/tasks')} className="text-[14px] text-primary hover:opacity-80 inline-flex items-center gap-1.5">
+          <button onClick={() => navigate('/tasks?tab=recurring')} className="text-[14px] text-primary hover:opacity-80 inline-flex items-center gap-1.5">
             <ArrowLeft size={14} /> Zurück zu Recurring
           </button>
           <div className="flex items-center gap-2">
@@ -451,7 +451,7 @@ export default function CronDetailPage() {
             <div className="mt-3 pl-4 border-l-2 border-border space-y-2">
               <div className="flex items-center gap-3">
                 <span className="text-[12px] text-muted-foreground w-[140px]">Cron Expression</span>
-                <span className="text-[13px] font-mono text-foreground bg-secondary px-2 py-0.5 rounded">{job.schedule?.expr || '—'}</span>
+                <span className="text-[13px] font-mono text-foreground bg-muted px-2 py-0.5 rounded">{job.schedule?.expr || '—'}</span>
               </div>
               <div className="flex items-center gap-3">
                 <span className="text-[12px] text-muted-foreground w-[140px]">Timezone</span>
@@ -505,7 +505,7 @@ export default function CronDetailPage() {
                 className={`${idx < runs.entries.length - 1 ? 'border-b border-border/50' : ''}`}
               >
                 <div
-                  className={`px-4 py-3 hover:bg-secondary transition-colors ${hasDetails ? 'cursor-pointer' : ''}`}
+                  className={`px-4 py-3 hover:bg-muted/50 transition-colors ${hasDetails ? 'cursor-pointer' : ''}`}
                   onClick={() => hasDetails && setExpandedRun(isExpanded ? null : idx)}
                 >
                   <div className="flex items-center gap-4 flex-wrap">
@@ -554,7 +554,7 @@ export default function CronDetailPage() {
                 {isExpanded && hasDetails && (
                   <div className="px-4 pb-3 ml-4">
                     {run.summary && (
-                      <div className="bg-secondary p-3 rounded-lg text-[12px] text-foreground whitespace-pre-wrap mb-2">
+                      <div className="bg-muted p-3 rounded-lg text-[12px] text-foreground whitespace-pre-wrap mb-2">
                         <span className="text-[11px] font-semibold text-muted-foreground uppercase">Summary</span>
                         <div className="mt-1">{run.summary}</div>
                       </div>

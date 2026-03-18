@@ -12,14 +12,7 @@ interface TreeNode {
   children?: TreeNode[];
 }
 
-const PINNED_FILES = [
-  { name: 'AGENTS.md', path: 'AGENTS.md' },
-  { name: 'MEMORY.md', path: 'MEMORY.md' },
-  { name: 'SOUL.md', path: 'SOUL.md' },
-  { name: 'TOOLS.md', path: 'TOOLS.md' },
-  { name: 'USER.md', path: 'USER.md' },
-  { name: 'HEARTBEAT.md', path: 'HEARTBEAT.md' },
-];
+const DEFAULT_PINNED = ['AGENTS.md', 'MEMORY.md', 'SOUL.md', 'TOOLS.md', 'USER.md', 'HEARTBEAT.md'];
 
 function FileIcon({ name }: { name: string }) {
   if (/\.md$/i.test(name)) return <File size={14} />;
@@ -36,6 +29,8 @@ function FileTreeItem({
   expanded,
   onToggle,
   onSelect,
+  onTogglePin,
+  isPinnedFn,
 }: {
   node: TreeNode;
   depth: number;
@@ -43,41 +38,79 @@ function FileTreeItem({
   expanded: Record<string, boolean>;
   onToggle: (path: string) => void;
   onSelect: (path: string) => void;
+  onTogglePin: (path: string) => void;
+  isPinnedFn: (path: string) => boolean;
 }) {
   const isDir = node.type === 'dir';
   const isOpen = expanded[node.path];
   const isActive = activePath === node.path;
+  const pinned = !isDir && isPinnedFn(node.path);
 
   return (
     <div>
-      <button
-        onClick={() => (isDir ? onToggle(node.path) : onSelect(node.path))}
-        className={`w-full text-left flex items-center gap-1.5 py-1 px-2 rounded text-[13px] transition-colors truncate ${
-          isActive
-            ? 'bg-sidebar-accent text-sidebar-primary font-medium'
-            : 'text-sidebar-foreground hover:bg-sidebar-accent'
-        }`}
-        style={{ paddingLeft: `${depth * 14 + 8}px` }}
-        title={node.path}
-      >
-        <span className="flex-shrink-0">
-          {isDir ? (isOpen ? <FolderOpen size={14} /> : <Folder size={14} />) : <FileIcon name={node.name} />}
-        </span>
-        <span className="truncate">{node.name}</span>
-      </button>
-      {isDir && isOpen && node.children && (
-        <div>
-          {node.children.map((child) => (
-            <FileTreeItem
-              key={child.path}
-              node={child}
-              depth={depth + 1}
-              activePath={activePath}
-              expanded={expanded}
-              onToggle={onToggle}
-              onSelect={onSelect}
-            />
-          ))}
+      {isDir ? (
+        <>
+          <button
+            onClick={() => onToggle(node.path)}
+            className={`w-full text-left flex items-center gap-1.5 py-1 px-2 rounded text-[13px] transition-colors truncate ${
+              isActive
+                ? 'bg-sidebar-accent text-sidebar-primary font-medium'
+                : 'text-sidebar-foreground hover:bg-sidebar-accent'
+            }`}
+            style={{ paddingLeft: `${depth * 14 + 8}px` }}
+            title={node.path}
+          >
+            <span className="flex-shrink-0">
+              {isOpen ? <FolderOpen size={14} /> : <Folder size={14} />}
+            </span>
+            <span className="truncate">{node.name}</span>
+          </button>
+          {isOpen && node.children && (
+            <div>
+              {node.children.map((child) => (
+                <FileTreeItem
+                  key={child.path}
+                  node={child}
+                  depth={depth + 1}
+                  activePath={activePath}
+                  expanded={expanded}
+                  onToggle={onToggle}
+                  onSelect={onSelect}
+                  onTogglePin={onTogglePin}
+                  isPinnedFn={isPinnedFn}
+                />
+              ))}
+            </div>
+          )}
+        </>
+      ) : (
+        <div className="group/pin flex items-center">
+          <button
+            onClick={() => onSelect(node.path)}
+            className={`flex-1 text-left flex items-center gap-1.5 py-1 px-2 rounded text-[13px] transition-colors truncate ${
+              isActive
+                ? 'bg-sidebar-accent text-sidebar-primary font-medium'
+                : 'text-sidebar-foreground hover:bg-sidebar-accent'
+            }`}
+            style={{ paddingLeft: `${depth * 14 + 8}px` }}
+            title={node.path}
+          >
+            <span className="text-[14px] flex-shrink-0">
+              <FileIcon name={node.name} />
+            </span>
+            <span className="truncate">{node.name}</span>
+          </button>
+          <button
+            onClick={(e) => { e.stopPropagation(); onTogglePin(node.path); }}
+            className={`p-1 mr-1 transition-opacity ${
+              pinned
+                ? 'opacity-100 text-primary'
+                : 'opacity-0 group-hover/pin:opacity-100 text-muted-foreground hover:text-primary'
+            }`}
+            title={pinned ? 'Unpin' : 'Pin'}
+          >
+            <Pin size={12} />
+          </button>
         </div>
       )}
     </div>
@@ -95,6 +128,31 @@ export default function DocsPage() {
   const [loading, setLoading] = useState(false);
   const [treeLoading, setTreeLoading] = useState(true);
   const editorRef = useRef<HTMLDivElement>(null);
+
+  const [pinnedPaths, setPinnedPaths] = useState<string[]>(() => {
+    try {
+      const stored = localStorage.getItem('docs-pinned-files');
+      return stored ? JSON.parse(stored) : DEFAULT_PINNED;
+    } catch {
+      return DEFAULT_PINNED;
+    }
+  });
+
+  useEffect(() => {
+    localStorage.setItem('docs-pinned-files', JSON.stringify(pinnedPaths));
+  }, [pinnedPaths]);
+
+  const togglePin = useCallback((filePath: string) => {
+    setPinnedPaths(prev => {
+      if (prev.includes(filePath)) {
+        return prev.filter(p => p !== filePath);
+      } else {
+        return [...prev, filePath];
+      }
+    });
+  }, []);
+
+  const isPinned = useCallback((filePath: string) => pinnedPaths.includes(filePath), [pinnedPaths]);
 
   const isDirty = content !== originalContent;
 
@@ -184,28 +242,42 @@ export default function DocsPage() {
 
         <div className="flex-1 overflow-y-auto py-1">
           {/* Pinned section */}
-          <div className="px-3 pt-2 pb-1 flex items-center gap-1.5">
-            <Pin size={11} className="text-muted-foreground" />
-            <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
-              Pinned
-            </span>
-          </div>
-          {PINNED_FILES.map((f) => (
-            <button
-              key={f.path}
-              onClick={() => handleSelect(f.path)}
-              className={`w-full text-left flex items-center gap-1.5 py-1 px-3 text-[13px] transition-colors truncate ${
-                activePath === f.path
-                  ? 'bg-sidebar-accent text-sidebar-primary font-medium'
-                  : 'text-sidebar-foreground hover:bg-sidebar-accent'
-              }`}
-            >
-              <span className="flex-shrink-0"><File size={14} /></span>
-              <span className="truncate">{f.name}</span>
-            </button>
-          ))}
-
-          <div className="border-t border-border my-2 mx-3" />
+          {pinnedPaths.length > 0 && (
+            <>
+              <div className="px-3 pt-2 pb-1 flex items-center gap-1.5">
+                <Pin size={11} className="text-muted-foreground" />
+                <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+                  Pinned
+                </span>
+              </div>
+              {pinnedPaths.map((filePath) => {
+                const fileName = filePath.split('/').pop() || filePath;
+                return (
+                  <div key={filePath} className="group flex items-center">
+                    <button
+                      onClick={() => handleSelect(filePath)}
+                      className={`flex-1 text-left flex items-center gap-1.5 py-1 px-3 text-[13px] transition-colors truncate ${
+                        activePath === filePath
+                          ? 'bg-sidebar-accent text-sidebar-primary font-medium'
+                          : 'text-sidebar-foreground hover:bg-sidebar-accent'
+                      }`}
+                    >
+                      <span className="flex-shrink-0"><File size={14} /></span>
+                      <span className="truncate">{fileName}</span>
+                    </button>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); togglePin(filePath); }}
+                      className="opacity-0 group-hover:opacity-100 p-1 mr-1 text-muted-foreground hover:text-primary transition-opacity"
+                      title="Unpin"
+                    >
+                      <Pin size={12} className="text-primary" />
+                    </button>
+                  </div>
+                );
+              })}
+              <div className="border-t border-border my-2 mx-3" />
+            </>
+          )}
 
           {/* File tree */}
           <div className="px-1">
@@ -221,6 +293,8 @@ export default function DocsPage() {
                   expanded={expanded}
                   onToggle={handleToggle}
                   onSelect={handleSelect}
+                  onTogglePin={togglePin}
+                  isPinnedFn={isPinned}
                 />
               ))
             )}
@@ -245,16 +319,31 @@ export default function DocsPage() {
                         </span>
                       </span>
                     ))}
-                    {isDirty && <span className="text-amber-500 ml-1" title="Unsaved changes">●</span>}
+
+                    {activePath && (
+                      <button
+                        onClick={() => togglePin(activePath)}
+                        className={`ml-1.5 transition-colors ${
+                          isPinned(activePath) ? 'text-primary' : 'text-muted-foreground/40 hover:text-muted-foreground'
+                        }`}
+                        title={isPinned(activePath) ? 'Unpin file' : 'Pin file'}
+                      >
+                        <Pin size={12} />
+                      </button>
+                    )}
                   </div>
                 )}
               </div>
               <div className="flex items-center gap-3 flex-shrink-0">
-                {lastSaved && (
-                  <span className="text-[11px] text-muted-foreground">
-                    Saved {formatTime(lastSaved)}
+                {isDirty ? (
+                  <span className="text-[12px] text-primary font-medium animate-pulse">
+                    Ungespeicherte Änderungen
                   </span>
-                )}
+                ) : lastSaved ? (
+                  <span className="text-[11px] text-muted-foreground">
+                    Gespeichert {formatTime(lastSaved)}
+                  </span>
+                ) : null}
                 <button
                   onClick={handleSave}
                   disabled={!isDirty || saving}
