@@ -5,7 +5,7 @@ import Placeholder from '@tiptap/extension-placeholder';
 import Typography from '@tiptap/extension-typography';
 import { Markdown } from 'tiptap-markdown';
 import GlobalDragHandle from 'tiptap-extension-global-drag-handle';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { SlashCommand } from '../extensions/slash-command';
 import { getSlashCommandSuggestion } from './SlashCommandList';
 
@@ -16,6 +16,8 @@ interface Props {
 }
 
 export default function TipTapEditor({ content, onChange, editable = true }: Props) {
+  const isSettling = useRef(true);
+  
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
@@ -42,6 +44,7 @@ export default function TipTapEditor({ content, onChange, editable = true }: Pro
     content,
     editable,
     onUpdate: ({ editor }) => {
+      if (isSettling.current) return; // Skip initial parse
       const md = editor.storage.markdown.getMarkdown();
       onChange(md);
     },
@@ -52,9 +55,21 @@ export default function TipTapEditor({ content, onChange, editable = true }: Pro
     },
   });
 
+  // Mark as settled after initial render
+  useEffect(() => {
+    if (editor) {
+      isSettling.current = true;
+      // Wait for TipTap to finish parsing then allow tracking
+      const timer = setTimeout(() => { isSettling.current = false; }, 300);
+      return () => clearTimeout(timer);
+    }
+  }, [editor]);
+
   useEffect(() => {
     if (editor && content !== editor.storage.markdown.getMarkdown()) {
+      isSettling.current = true;
       editor.commands.setContent(content);
+      setTimeout(() => { isSettling.current = false; }, 300);
     }
   }, [content, editor]);
 
