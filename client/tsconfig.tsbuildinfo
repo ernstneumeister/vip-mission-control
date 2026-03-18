@@ -1,0 +1,1 @@
+{"root":["./src/App.tsx","./src/api.ts","./src/main.tsx","./src/types.ts","./src/utils.ts","./src/components/AgentBadge.tsx","./src/components/Header.tsx","./src/components/Modal.tsx","./src/components/Sidebar.tsx","./src/components/StatusBadge.tsx","./src/components/TaskCard.tsx","./src/pages/TaskDetail.tsx","./src/pages/TasksPage.tsx"],"version":"5.6.3"}
