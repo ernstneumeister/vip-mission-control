@@ -265,13 +265,16 @@ function getCronListCached(fresh = false) {
   }
   const output = execSync('openclaw cron list --json', { encoding: 'utf-8', timeout: 15000 });
   const data = JSON.parse(output);
-  cronCache = { data, expiresAt: now + 5000 };
+  cronCache = { data, expiresAt: now + 30000 }; // 30s cache
   return data;
 }
 
 function invalidateCronCache() {
   cronCache = { data: null, expiresAt: 0 };
 }
+
+// Pre-warm cache on startup
+try { getCronListCached(); console.log('📋 Cron cache pre-warmed'); } catch(e) { console.warn('Cron pre-warm failed:', e.message); }
 
 // ─── Cron (OpenClaw) ───
 app.get('/api/cron', (req, res) => {
@@ -329,11 +332,20 @@ app.get('/api/cron/:id', (req, res) => {
   }
 });
 
+// Runs cache per job (60s TTL)
+const runsCache = {};
 app.get('/api/cron/:id/runs', (req, res) => {
   try {
     const limit = req.query.limit || '20';
+    const cacheKey = `${req.params.id}:${limit}`;
+    const now = Date.now();
+    const cached = runsCache[cacheKey];
+    if (cached && now < cached.expiresAt && !req.query.fresh) {
+      return res.json(cached.data);
+    }
     const output = execSync(`openclaw cron runs --id ${req.params.id} --limit ${limit}`, { encoding: 'utf-8', timeout: 30000 });
     const data = JSON.parse(output);
+    runsCache[cacheKey] = { data, expiresAt: now + 60000 }; // 60s cache
     res.json(data);
   } catch(e) {
     res.status(500).json({ error: e.message });
