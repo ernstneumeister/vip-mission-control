@@ -1,12 +1,11 @@
 import { useEditor, EditorContent } from '@tiptap/react';
-import { BubbleMenu } from '@tiptap/react/menus';
 import StarterKit from '@tiptap/starter-kit';
 import Placeholder from '@tiptap/extension-placeholder';
 import { Markdown } from 'tiptap-markdown';
 import { useEffect } from 'react';
 
 interface Props {
-  content: string;
+  content: string;  // Markdown string
   onChange: (markdown: string) => void;
   editable?: boolean;
 }
@@ -16,11 +15,12 @@ export default function TipTapEditor({ content, onChange, editable = true }: Pro
     extensions: [
       StarterKit.configure({
         heading: { levels: [1, 2, 3, 4] },
-        bulletList: { keepMarks: true, keepAttributes: false },
-        orderedList: { keepMarks: true, keepAttributes: false },
+        codeBlock: {
+          HTMLAttributes: { class: 'rounded-lg bg-muted p-4 font-mono text-[13px]' },
+        },
       }),
       Placeholder.configure({
-        placeholder: 'Start writing...',
+        placeholder: 'Start typing...',
       }),
       Markdown.configure({
         html: false,
@@ -28,7 +28,7 @@ export default function TipTapEditor({ content, onChange, editable = true }: Pro
         transformPastedText: true,
       }),
     ],
-    content,
+    content: content,
     editable,
     onUpdate: ({ editor }) => {
       const md = editor.storage.markdown.getMarkdown();
@@ -36,11 +36,12 @@ export default function TipTapEditor({ content, onChange, editable = true }: Pro
     },
     editorProps: {
       attributes: {
-        class: 'focus:outline-none min-h-[500px]',
+        class: 'prose prose-sm max-w-none focus:outline-none min-h-[500px] px-6 py-4',
       },
     },
   });
 
+  // Update content when file changes externally
   useEffect(() => {
     if (editor && content !== editor.storage.markdown.getMarkdown()) {
       editor.commands.setContent(content);
@@ -48,95 +49,106 @@ export default function TipTapEditor({ content, onChange, editable = true }: Pro
   }, [content, editor]);
 
   useEffect(() => {
-    if (editor) editor.setEditable(editable);
+    if (editor) {
+      editor.setEditable(editable);
+    }
   }, [editor, editable]);
 
   if (!editor) return null;
 
   return (
     <div className="tiptap-editor h-full flex flex-col">
-      {/* Notion-like Bubble Menu - appears on text selection */}
-      <BubbleMenu
-        editor={editor}
-        tippyOptions={{ duration: 150, placement: 'top' }}
-        className="flex items-center gap-0.5 px-1 py-1 rounded-lg shadow-lg border border-border"
-        style={{ backgroundColor: 'var(--card)' }}
-      >
-        <BubbleButton
-          onClick={() => editor.chain().focus().toggleBold().run()}
-          active={editor.isActive('bold')}
-          title="Bold"
-        >
-          <strong>B</strong>
-        </BubbleButton>
-        <BubbleButton
-          onClick={() => editor.chain().focus().toggleItalic().run()}
-          active={editor.isActive('italic')}
-          title="Italic"
-        >
-          <em>I</em>
-        </BubbleButton>
-        <BubbleButton
-          onClick={() => editor.chain().focus().toggleStrike().run()}
-          active={editor.isActive('strike')}
-          title="Strikethrough"
-        >
-          <s>S</s>
-        </BubbleButton>
-        <BubbleButton
-          onClick={() => editor.chain().focus().toggleCode().run()}
-          active={editor.isActive('code')}
-          title="Code"
-        >
-          {'</>'}
-        </BubbleButton>
-        <BubbleDivider />
-        <BubbleButton
+      {/* Toolbar */}
+      <div className="flex items-center gap-1 px-3 py-2 border-b border-border bg-card flex-shrink-0 flex-wrap">
+        <ToolbarButton
           onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
           active={editor.isActive('heading', { level: 1 })}
           title="Heading 1"
         >
           H1
-        </BubbleButton>
-        <BubbleButton
+        </ToolbarButton>
+        <ToolbarButton
           onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
           active={editor.isActive('heading', { level: 2 })}
           title="Heading 2"
         >
           H2
-        </BubbleButton>
-        <BubbleButton
+        </ToolbarButton>
+        <ToolbarButton
           onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
           active={editor.isActive('heading', { level: 3 })}
           title="Heading 3"
         >
           H3
-        </BubbleButton>
-        <BubbleDivider />
-        <BubbleButton
+        </ToolbarButton>
+        <ToolbarDivider />
+        <ToolbarButton
+          onClick={() => editor.chain().focus().toggleBold().run()}
+          active={editor.isActive('bold')}
+          title="Bold"
+        >
+          <strong>B</strong>
+        </ToolbarButton>
+        <ToolbarButton
+          onClick={() => editor.chain().focus().toggleItalic().run()}
+          active={editor.isActive('italic')}
+          title="Italic"
+        >
+          <em>I</em>
+        </ToolbarButton>
+        <ToolbarButton
+          onClick={() => editor.chain().focus().toggleStrike().run()}
+          active={editor.isActive('strike')}
+          title="Strikethrough"
+        >
+          <s>S</s>
+        </ToolbarButton>
+        <ToolbarButton
+          onClick={() => editor.chain().focus().toggleCode().run()}
+          active={editor.isActive('code')}
+          title="Inline Code"
+        >
+          {'</>'}
+        </ToolbarButton>
+        <ToolbarDivider />
+        <ToolbarButton
           onClick={() => editor.chain().focus().toggleBulletList().run()}
           active={editor.isActive('bulletList')}
           title="Bullet List"
         >
           •
-        </BubbleButton>
-        <BubbleButton
+        </ToolbarButton>
+        <ToolbarButton
           onClick={() => editor.chain().focus().toggleOrderedList().run()}
           active={editor.isActive('orderedList')}
-          title="Numbered List"
+          title="Ordered List"
         >
           1.
-        </BubbleButton>
-        <BubbleButton
+        </ToolbarButton>
+        <ToolbarDivider />
+        <ToolbarButton
+          onClick={() => editor.chain().focus().toggleCodeBlock().run()}
+          active={editor.isActive('codeBlock')}
+          title="Code Block"
+        >
+          {'{ }'}
+        </ToolbarButton>
+        <ToolbarButton
           onClick={() => editor.chain().focus().toggleBlockquote().run()}
           active={editor.isActive('blockquote')}
           title="Quote"
         >
-          "
-        </BubbleButton>
-      </BubbleMenu>
+          &ldquo;
+        </ToolbarButton>
+        <ToolbarButton
+          onClick={() => editor.chain().focus().setHorizontalRule().run()}
+          title="Horizontal Rule"
+        >
+          ─
+        </ToolbarButton>
+      </div>
 
-      {/* Editor area - clean, no toolbar */}
+      {/* Editor area */}
       <div className="flex-1 overflow-auto bg-card">
         <EditorContent editor={editor} className="h-full" />
       </div>
@@ -144,7 +156,7 @@ export default function TipTapEditor({ content, onChange, editable = true }: Pro
   );
 }
 
-function BubbleButton({ children, onClick, active, title }: {
+function ToolbarButton({ children, onClick, active, title }: {
   children: React.ReactNode;
   onClick: () => void;
   active?: boolean;
@@ -154,9 +166,9 @@ function BubbleButton({ children, onClick, active, title }: {
     <button
       onClick={onClick}
       title={title}
-      className={`w-7 h-7 flex items-center justify-center rounded text-[12px] font-medium transition-colors ${
+      className={`w-8 h-8 flex items-center justify-center rounded text-[13px] font-medium transition-colors ${
         active
-          ? 'bg-primary/15 text-primary'
+          ? 'bg-primary/10 text-primary'
           : 'text-muted-foreground hover:bg-muted hover:text-foreground'
       }`}
     >
@@ -165,6 +177,6 @@ function BubbleButton({ children, onClick, active, title }: {
   );
 }
 
-function BubbleDivider() {
-  return <div className="w-px h-4 bg-border mx-0.5" />;
+function ToolbarDivider() {
+  return <div className="w-px h-5 bg-border mx-1" />;
 }

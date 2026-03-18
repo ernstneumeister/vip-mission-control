@@ -69,7 +69,7 @@ export default function ThemeToggle() {
         className="absolute w-[20px] h-[20px] rounded-full shadow-sm transition-all duration-200"
         style={{
           left: isDark ? '28px' : '3px',
-          backgroundColor: isDark ? 'var(--primary)' : 'var(--card)',
+          backgroundColor: isDark ? '#c4841d' : 'var(--card)',
         }}
       />
     </button>

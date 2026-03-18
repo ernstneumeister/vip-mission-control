@@ -2,8 +2,76 @@ import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import type { CronJobDetail, CronRunEntry, CronRunHistory } from '../types';
 import { getCronJob, getCronRuns, updateCronJob, triggerCronRun, enableCronJob, disableCronJob, deleteCronJob } from '../api';
-import Modal from '../components/Modal';
 import { Edit, Pause, Play, Rocket, Trash, RefreshCw, ArrowLeft } from '../components/Icons';
+
+// --- Helpers ---
+
+function formatBerlinDate(iso: string | null): string {
+  if (!iso) return '—';
+  return new Date(iso).toLocaleString('de-DE', {
+    day: '2-digit', month: '2-digit', year: 'numeric',
+    hour: '2-digit', minute: '2-digit',
+    timeZone: 'Europe/Berlin',
+  }) + ' Uhr';
+}
+
+function formatScheduleText(time: string, dom: string, mon: string, dow: string): string {
+  if (dom === '*' && mon === '*' && dow === '*') {
+    return `Täglich um ${time} Uhr`;
+  }
+  if (dom === '*' && mon === '*' && dow !== '*') {
+    const days: Record<string, string> = {
+      '0': 'Sonntags', '1': 'Montags', '2': 'Dienstags', '3': 'Mittwochs',
+      '4': 'Donnerstags', '5': 'Freitags', '6': 'Samstags', '7': 'Sonntags',
+    };
+    const dowParts = dow.split(',');
+    if (dowParts.length > 1) {
+      const dayNames = dowParts.map(d => days[d.trim()] || d.trim()).join(', ');
+      return `${dayNames} um ${time} Uhr`;
+    }
+    return `${days[dow] || dow} um ${time} Uhr`;
+  }
+  return `${time} Uhr (${dom}.${mon} ${dow})`;
+}
+
+function cronToReadable(expr: string, tz: string): string {
+  const parts = expr.split(' ');
+  if (parts.length < 5) return `Cron: ${expr}`;
+  const [min, hour, dom, mon, dow] = parts;
+  const h = parseInt(hour);
+  const m = parseInt(min);
+
+  if (isNaN(h) || isNaN(m)) return `Cron: ${expr}`;
+
+  if (tz === 'UTC') {
+    const now = new Date();
+    const utcDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), h, m);
+    const berlinStr = utcDate.toLocaleString('de-DE', {
+      hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Berlin',
+    });
+    return formatScheduleText(berlinStr, dom, mon, dow);
+  }
+
+  const timeStr = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+  return formatScheduleText(timeStr, dom, mon, dow);
+}
+
+function formatDuration(ms: number | null): string {
+  if (!ms) return '—';
+  if (ms < 1000) return `${ms}ms`;
+  const seconds = ms / 1000;
+  if (seconds < 60) return `${seconds.toFixed(1)}s`;
+  const minutes = Math.floor(seconds / 60);
+  const secs = Math.round(seconds % 60);
+  return `${minutes}m ${secs}s`;
+}
+
+function formatTokens(usage?: CronRunEntry['usage']): string {
+  if (!usage) return '—';
+  return `${usage.input_tokens.toLocaleString()} in / ${usage.output_tokens.toLocaleString()} out / ${usage.total_tokens.toLocaleString()} total`;
+}
+
+// --- Component ---
 
 export default function CronDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -13,9 +81,21 @@ export default function CronDetailPage() {
   const [loading, setLoading] = useState(true);
   const [runsLoading, setRunsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [showEdit, setShowEdit] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
   const [expandedRun, setExpandedRun] = useState<number | null>(null);
+
+  // Inline edit state
+  const [editing, setEditing] = useState(false);
+  const [editName, setEditName] = useState('');
+  const [editCron, setEditCron] = useState('');
+  const [editTz, setEditTz] = useState('');
+  const [editMessage, setEditMessage] = useState('');
+  const [editModel, setEditModel] = useState('');
+  const [editSession, setEditSession] = useState('');
+  const [saving, setSaving] = useState(false);
+
+  // Advanced toggle
+  const [showAdvanced, setShowAdvanced] = useState(false);
 
   const loadJob = useCallback(async () => {
     if (!id) return;
@@ -46,6 +126,45 @@ export default function CronDetailPage() {
     loadJob();
     loadRuns();
   }, [loadJob, loadRuns]);
+
+  const startEditing = () => {
+    if (!job) return;
+    setEditName(job.name);
+    setEditCron(job.schedule?.expr || '');
+    setEditTz(job.schedule?.tz || 'Europe/Berlin');
+    setEditMessage(job.payload || '');
+    setEditModel(job.model || '');
+    setEditSession(job.sessionTarget || '');
+    setEditing(true);
+  };
+
+  const cancelEditing = () => {
+    setEditing(false);
+  };
+
+  const handleSave = async () => {
+    if (!job || !id) return;
+    setSaving(true);
+    try {
+      const data: Record<string, any> = {};
+      if (editName !== job.name) data.name = editName;
+      if (editCron !== (job.schedule?.expr || '')) data.schedule = editCron;
+      if (editTz !== (job.schedule?.tz || '')) data.timezone = editTz;
+      if (editMessage !== (job.payload || '')) data.message = editMessage;
+      if (editModel !== (job.model || '')) data.model = editModel;
+      if (editSession !== (job.sessionTarget || '')) data.session = editSession;
+
+      if (Object.keys(data).length > 0) {
+        await updateCronJob(job.id, data);
+      }
+      setEditing(false);
+      await loadJob();
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const handleToggle = async () => {
     if (!job || !id) return;
@@ -93,29 +212,8 @@ export default function CronDetailPage() {
     }
   };
 
-  const formatBerlinDate = (iso: string | null): string => {
-    if (!iso) return '—';
-    return new Date(iso).toLocaleString('de-DE', {
-      day: '2-digit', month: '2-digit', year: 'numeric',
-      hour: '2-digit', minute: '2-digit', second: '2-digit',
-      timeZone: 'Europe/Berlin',
-    });
-  };
-
-  const formatDuration = (ms: number | null): string => {
-    if (!ms) return '—';
-    if (ms < 1000) return `${ms}ms`;
-    const seconds = ms / 1000;
-    if (seconds < 60) return `${seconds.toFixed(1)}s`;
-    const minutes = Math.floor(seconds / 60);
-    const secs = Math.round(seconds % 60);
-    return `${minutes}m ${secs}s`;
-  };
-
-  const formatTokens = (usage?: CronRunEntry['usage']): string => {
-    if (!usage) return '—';
-    return `${usage.input_tokens.toLocaleString()} in / ${usage.output_tokens.toLocaleString()} out / ${usage.total_tokens.toLocaleString()} total`;
-  };
+  const inputClass = 'w-full h-[36px] px-3 border border-border rounded-lg bg-card text-[14px] text-foreground outline-none focus:border-primary focus:ring-1 focus:ring-primary/30';
+  const textareaClass = 'w-full px-3 py-2 border border-border rounded-lg bg-card text-[13px] text-foreground outline-none focus:border-primary focus:ring-1 focus:ring-primary/30 resize-none font-mono';
 
   if (loading) {
     return (
@@ -129,7 +227,7 @@ export default function CronDetailPage() {
     return (
       <div className="p-6">
         <button onClick={() => navigate('/tasks')} className="text-[14px] text-primary hover:opacity-80 mb-4 flex items-center gap-1.5">
-          <ArrowLeft size={14} /> Back to Recurring
+          <ArrowLeft size={14} /> Zurück zu Recurring
         </button>
         <div className="p-4 bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 rounded-lg text-[13px] text-red-700 dark:text-red-300">
           {error || 'Job not found'}
@@ -138,155 +236,239 @@ export default function CronDetailPage() {
     );
   }
 
+  const scheduleReadable = job.schedule?.expr
+    ? cronToReadable(job.schedule.expr, job.schedule.tz || 'UTC')
+    : '—';
+
   return (
-    <div className="p-6 max-w-[1200px]">
-      {/* Top section */}
+    <div className="p-6 max-w-[900px]">
+      {/* Header with back + action buttons */}
       <div className="mb-6">
-        <button onClick={() => navigate('/tasks')} className="text-[14px] text-primary hover:opacity-80 mb-3 inline-flex items-center gap-1.5">
-          <ArrowLeft size={14} /> Back to Recurring
-        </button>
-        <div className="flex items-start justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <h1 className="text-[28px] font-bold text-foreground">{job.name}</h1>
-            <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-[12px] font-semibold ${
-              job.enabled ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900 dark:text-emerald-300' : 'bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400'
-            }`}>
-              {job.enabled ? '● Enabled' : '○ Disabled'}
-            </span>
-            {job.consecutiveErrors > 0 && (
-              <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[12px] font-semibold bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300">
-                ⚠ {job.consecutiveErrors} error{job.consecutiveErrors > 1 ? 's' : ''}
-              </span>
+        <div className="flex items-center justify-between mb-4">
+          <button onClick={() => navigate('/tasks')} className="text-[14px] text-primary hover:opacity-80 inline-flex items-center gap-1.5">
+            <ArrowLeft size={14} /> Zurück zu Recurring
+          </button>
+          <div className="flex items-center gap-2">
+            {editing ? (
+              <>
+                <button
+                  onClick={handleSave}
+                  disabled={saving || !editName.trim()}
+                  className={`h-[36px] px-5 bg-primary hover:opacity-90 disabled:opacity-50 text-primary-foreground text-[13px] font-semibold rounded-lg transition-colors ${saving ? 'opacity-50' : ''}`}
+                >
+                  {saving ? 'Speichern...' : 'Speichern'}
+                </button>
+                <button
+                  onClick={cancelEditing}
+                  className="h-[36px] px-4 bg-card border border-border hover:bg-secondary text-foreground text-[13px] font-medium rounded-lg transition-colors"
+                >
+                  Abbrechen
+                </button>
+              </>
+            ) : (
+              <>
+                <button
+                  onClick={startEditing}
+                  className="h-[36px] px-4 bg-card border border-border hover:bg-secondary text-foreground text-[13px] font-medium rounded-lg transition-colors flex items-center gap-1.5"
+                >
+                  <Edit size={14} /> Edit
+                </button>
+                <button
+                  onClick={handleToggle}
+                  disabled={actionLoading}
+                  className={`h-[36px] px-4 border text-[13px] font-medium rounded-lg transition-colors flex items-center gap-1.5 ${
+                    job.enabled
+                      ? 'bg-amber-50 border-amber-200 text-amber-700 hover:bg-amber-100 dark:bg-amber-950 dark:border-amber-800 dark:text-amber-300'
+                      : 'bg-emerald-50 border-emerald-200 text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-950 dark:border-emerald-800 dark:text-emerald-300'
+                  } ${actionLoading ? 'opacity-50' : ''}`}
+                >
+                  {job.enabled ? <><Pause size={14} /> Pause</> : <><Play size={14} /> Resume</>}
+                </button>
+                <button
+                  onClick={handleRunNow}
+                  disabled={actionLoading}
+                  className={`h-[36px] px-4 bg-primary hover:opacity-90 text-primary-foreground text-[13px] font-semibold rounded-lg transition-colors flex items-center gap-1.5 ${actionLoading ? 'opacity-50' : ''}`}
+                >
+                  <Rocket size={14} /> Run Now
+                </button>
+                <button
+                  onClick={handleDelete}
+                  disabled={actionLoading}
+                  className={`h-[36px] px-4 bg-red-50 border border-red-200 text-red-600 hover:bg-red-100 dark:bg-red-950 dark:border-red-800 dark:text-red-400 text-[13px] font-medium rounded-lg transition-colors flex items-center gap-1.5 ${actionLoading ? 'opacity-50' : ''}`}
+                >
+                  <Trash size={14} /> Delete
+                </button>
+              </>
             )}
           </div>
-          <div className="flex items-center gap-2 flex-shrink-0">
-            <button
-              onClick={() => setShowEdit(true)}
-              className="h-[36px] px-4 bg-card border border-border hover:bg-secondary text-foreground text-[13px] font-medium rounded-lg transition-colors flex items-center gap-1.5"
-            >
-              <Edit size={14} /> Edit
-            </button>
-            <button
-              onClick={handleToggle}
-              disabled={actionLoading}
-              className={`h-[36px] px-4 border text-[13px] font-medium rounded-lg transition-colors flex items-center gap-1.5 ${
-                job.enabled
-                  ? 'bg-amber-50 border-amber-200 text-amber-700 hover:bg-amber-100 dark:bg-amber-950 dark:border-amber-800 dark:text-amber-300'
-                  : 'bg-emerald-50 border-emerald-200 text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-950 dark:border-emerald-800 dark:text-emerald-300'
-              } ${actionLoading ? 'opacity-50' : ''}`}
-            >
-              {job.enabled ? <><Pause size={14} /> Pause</> : <><Play size={14} /> Resume</>}
-            </button>
-            <button
-              onClick={handleRunNow}
-              disabled={actionLoading}
-              className={`h-[36px] px-4 bg-primary hover:opacity-90 text-primary-foreground text-[13px] font-semibold rounded-lg transition-colors flex items-center gap-1.5 ${actionLoading ? 'opacity-50' : ''}`}
-            >
-              <Rocket size={14} /> Run Now
-            </button>
-            <button
-              onClick={handleDelete}
-              disabled={actionLoading}
-              className={`h-[36px] px-4 bg-red-50 border border-red-200 text-red-600 hover:bg-red-100 dark:bg-red-950 dark:border-red-800 dark:text-red-400 text-[13px] font-medium rounded-lg transition-colors flex items-center gap-1.5 ${actionLoading ? 'opacity-50' : ''}`}
-            >
-              <Trash size={14} /> Delete
-            </button>
-          </div>
         </div>
-        {job.description && (
-          <p className="text-[14px] text-muted-foreground mt-2">{job.description}</p>
+
+        {/* Job name + status */}
+        {editing ? (
+          <div className="space-y-4">
+            <input
+              value={editName}
+              onChange={(e) => setEditName(e.target.value)}
+              className={`${inputClass} text-[24px] font-bold h-[48px]`}
+              placeholder="Job Name"
+              autoFocus
+            />
+            <div className="flex items-center gap-4">
+              <div className="flex-1">
+                <label className="block text-[12px] font-medium text-muted-foreground mb-1">Schedule (Cron)</label>
+                <input
+                  value={editCron}
+                  onChange={(e) => setEditCron(e.target.value)}
+                  className={`${inputClass} font-mono`}
+                  placeholder="0 20 * * *"
+                />
+              </div>
+              <div className="w-[200px]">
+                <label className="block text-[12px] font-medium text-muted-foreground mb-1">Timezone</label>
+                <select
+                  value={editTz}
+                  onChange={(e) => setEditTz(e.target.value)}
+                  className={inputClass}
+                >
+                  <option value="Europe/Berlin">Europe/Berlin</option>
+                  <option value="UTC">UTC</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div>
+            <div className="flex items-center gap-3 mb-1">
+              <h1 className="text-[28px] font-bold text-foreground">{job.name}</h1>
+              <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-[12px] font-semibold ${
+                job.enabled
+                  ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900 dark:text-emerald-300'
+                  : 'bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400'
+              }`}>
+                {job.enabled ? '● Enabled' : '○ Disabled'}
+              </span>
+              {job.consecutiveErrors > 0 && (
+                <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[12px] font-semibold bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300">
+                  ⚠ {job.consecutiveErrors} error{job.consecutiveErrors > 1 ? 's' : ''}
+                </span>
+              )}
+            </div>
+            <p className="text-[16px] text-muted-foreground">{scheduleReadable}</p>
+          </div>
         )}
       </div>
 
-      {/* Info cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-        {/* Schedule card */}
-        <div className="bg-card border border-border rounded-xl p-4">
-          <h3 className="text-[12px] font-semibold text-muted-foreground uppercase tracking-wider mb-3">Schedule</h3>
-          <div className="space-y-2">
-            <div>
-              <span className="text-[12px] text-muted-foreground">Cron Expression</span>
-              <div className="text-[14px] font-mono text-foreground bg-secondary px-2 py-1 rounded mt-0.5">{job.schedule?.expr || '—'}</div>
+      {/* Info section */}
+      {!editing && (
+        <div className="bg-card border border-border rounded-xl p-5 mb-6">
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-[13px] text-muted-foreground w-[120px]">Next Run</span>
+              <span className="text-[14px] text-foreground font-medium">{formatBerlinDate(job.nextRunAt)}</span>
             </div>
-            <div>
-              <span className="text-[12px] text-muted-foreground">Timezone</span>
-              <div className="text-[14px] text-foreground">{job.schedule?.tz || '—'}</div>
-            </div>
-            <div>
-              <span className="text-[12px] text-muted-foreground">Next Run</span>
-              <div className="text-[14px] text-foreground">{formatBerlinDate(job.nextRunAt)}</div>
-            </div>
-            <div>
-              <span className="text-[12px] text-muted-foreground">Created</span>
-              <div className="text-[14px] text-foreground">{formatBerlinDate(job.createdAt)}</div>
-            </div>
-          </div>
-        </div>
-
-        {/* Last Run card */}
-        <div className="bg-card border border-border rounded-xl p-4">
-          <h3 className="text-[12px] font-semibold text-muted-foreground uppercase tracking-wider mb-3">Last Run</h3>
-          <div className="space-y-2">
-            <div>
-              <span className="text-[12px] text-muted-foreground">Time</span>
-              <div className="text-[14px] text-foreground">{formatBerlinDate(job.lastRunAt)}</div>
-            </div>
-            <div>
-              <span className="text-[12px] text-muted-foreground">Status</span>
-              <div className="mt-0.5">
-                {job.lastStatus ? (
-                  <span className={`inline-flex items-center px-2 py-0.5 rounded text-[12px] font-medium ${
-                    job.lastStatus === 'ok' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900 dark:text-emerald-300' : 'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300'
+            <div className="flex items-center justify-between">
+              <span className="text-[13px] text-muted-foreground w-[120px]">Last Run</span>
+              <span className="text-[14px] text-foreground font-medium flex items-center gap-2">
+                {formatBerlinDate(job.lastRunAt)}
+                {job.lastStatus && (
+                  <span className={`inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold ${
+                    job.lastStatus === 'ok'
+                      ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900 dark:text-emerald-300'
+                      : 'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300'
                   }`}>
-                    {job.lastStatus}
+                    {job.lastStatus === 'ok' ? '✅' : '❌'} {job.lastStatus}
                   </span>
-                ) : (
-                  <span className="text-[14px] text-muted-foreground">—</span>
                 )}
+                {job.lastDurationMs ? (
+                  <span className="text-[12px] text-muted-foreground">{formatDuration(job.lastDurationMs)}</span>
+                ) : null}
+              </span>
+            </div>
+            {job.model && (
+              <div className="flex items-center justify-between">
+                <span className="text-[13px] text-muted-foreground w-[120px]">Modell</span>
+                <span className="text-[14px] text-foreground font-medium font-mono">{job.model}</span>
               </div>
-            </div>
-            <div>
-              <span className="text-[12px] text-muted-foreground">Duration</span>
-              <div className="text-[14px] text-foreground">{formatDuration(job.lastDurationMs)}</div>
-            </div>
-            <div>
-              <span className="text-[12px] text-muted-foreground">Updated</span>
-              <div className="text-[14px] text-foreground">{formatBerlinDate(job.updatedAt)}</div>
-            </div>
+            )}
           </div>
         </div>
+      )}
 
-        {/* Configuration card */}
-        <div className="bg-card border border-border rounded-xl p-4">
-          <h3 className="text-[12px] font-semibold text-muted-foreground uppercase tracking-wider mb-3">Configuration</h3>
-          <div className="space-y-2">
-            <div>
-              <span className="text-[12px] text-muted-foreground">Session Target</span>
-              <div className="text-[14px] text-foreground">{job.sessionTarget || '—'}</div>
-            </div>
-            <div>
-              <span className="text-[12px] text-muted-foreground">Agent</span>
-              <div className="text-[14px] text-foreground">{job.agentId || '—'}</div>
-            </div>
-            <div>
-              <span className="text-[12px] text-muted-foreground">Model Override</span>
-              <div className="text-[14px] text-foreground">{job.model || 'Default'}</div>
-            </div>
-            <div>
-              <span className="text-[12px] text-muted-foreground">Wake Mode</span>
-              <div className="text-[14px] text-foreground">{job.wakeMode || '—'}</div>
+      {/* Payload / Instruction */}
+      <div className="mb-6">
+        <h3 className="text-[12px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">Anweisung</h3>
+        {editing ? (
+          <textarea
+            value={editMessage}
+            onChange={(e) => setEditMessage(e.target.value)}
+            rows={6}
+            className={textareaClass}
+            placeholder="Nachricht / Payload..."
+          />
+        ) : (
+          <div className="bg-card border border-border rounded-xl p-4">
+            <div className="text-[13px] text-foreground whitespace-pre-wrap leading-relaxed">
+              {job.payload || <span className="text-muted-foreground italic">Keine Anweisung</span>}
             </div>
           </div>
-        </div>
+        )}
       </div>
 
-      {/* Payload */}
-      {job.payload && (
-        <div className="bg-card border border-border rounded-xl p-4 mb-8">
-          <h3 className="text-[12px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">Message / Payload</h3>
-          <div className="text-[13px] text-foreground bg-secondary p-3 rounded-lg whitespace-pre-wrap font-mono">
-            {job.payload}
+      {/* Model (edit mode only) */}
+      {editing && (
+        <div className="mb-6 flex items-center gap-4">
+          <div className="flex-1">
+            <label className="block text-[12px] font-medium text-muted-foreground mb-1">Modell (optional)</label>
+            <input
+              value={editModel}
+              onChange={(e) => setEditModel(e.target.value)}
+              className={inputClass}
+              placeholder="Default"
+            />
           </div>
+          <div className="flex-1">
+            <label className="block text-[12px] font-medium text-muted-foreground mb-1">Session Target</label>
+            <input
+              value={editSession}
+              onChange={(e) => setEditSession(e.target.value)}
+              className={inputClass}
+              placeholder="isolated"
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Advanced (view mode) */}
+      {!editing && (
+        <div className="mb-8">
+          <button
+            onClick={() => setShowAdvanced(!showAdvanced)}
+            className="text-[13px] text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1.5"
+          >
+            <span className="text-[11px]">{showAdvanced ? '▼' : '▶'}</span> Erweitert
+          </button>
+          {showAdvanced && (
+            <div className="mt-3 pl-4 border-l-2 border-border space-y-2">
+              <div className="flex items-center gap-3">
+                <span className="text-[12px] text-muted-foreground w-[140px]">Cron Expression</span>
+                <span className="text-[13px] font-mono text-foreground bg-secondary px-2 py-0.5 rounded">{job.schedule?.expr || '—'}</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <span className="text-[12px] text-muted-foreground w-[140px]">Timezone</span>
+                <span className="text-[13px] text-foreground">{job.schedule?.tz || '—'}</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <span className="text-[12px] text-muted-foreground w-[140px]">Session Target</span>
+                <span className="text-[13px] text-foreground">{job.sessionTarget || '—'}</span>
+              </div>
+              {job.agentId && (
+                <div className="flex items-center gap-3">
+                  <span className="text-[12px] text-muted-foreground w-[140px]">Agent</span>
+                  <span className="text-[13px] text-foreground">{job.agentId}</span>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       )}
 
@@ -390,103 +572,6 @@ export default function CronDetailPage() {
           })}
         </div>
       )}
-
-      {/* Edit Modal */}
-      {showEdit && job && (
-        <EditCronModal
-          job={job}
-          onClose={() => setShowEdit(false)}
-          onSaved={() => {
-            setShowEdit(false);
-            loadJob();
-          }}
-        />
-      )}
     </div>
-  );
-}
-
-function EditCronModal({ job, onClose, onSaved }: { job: CronJobDetail; onClose: () => void; onSaved: () => void }) {
-  const [name, setName] = useState(job.name);
-  const [cronExpr, setCronExpr] = useState(job.schedule?.expr || '');
-  const [timezone, setTimezone] = useState(job.schedule?.tz || 'Europe/Berlin');
-  const [message, setMessage] = useState(job.payload || '');
-  const [description, setDescription] = useState(job.description || '');
-  const [model, setModel] = useState(job.model || '');
-  const [session, setSession] = useState(job.sessionTarget || '');
-  const [saving, setSaving] = useState(false);
-
-  const handleSave = async () => {
-    setSaving(true);
-    try {
-      const data: Record<string, any> = {};
-      if (name !== job.name) data.name = name;
-      if (cronExpr !== (job.schedule?.expr || '')) data.schedule = cronExpr;
-      if (timezone !== (job.schedule?.tz || '')) data.timezone = timezone;
-      if (message !== (job.payload || '')) data.message = message;
-      if (description !== (job.description || '')) data.description = description;
-      if (model !== (job.model || '')) data.model = model;
-      if (session !== (job.sessionTarget || '')) data.session = session;
-
-      if (Object.keys(data).length > 0) {
-        await updateCronJob(job.id, data);
-      }
-      onSaved();
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const inputClass = 'w-full h-[36px] px-3 border border-border rounded-lg bg-card text-[13px] text-foreground outline-none focus:border-primary';
-  const textareaClass = 'w-full px-3 py-2 border border-border rounded-lg bg-card text-[13px] text-foreground outline-none focus:border-primary resize-none';
-
-  return (
-    <Modal open={true} onClose={onClose} title="Edit Cron Job">
-      <div className="space-y-4">
-        <div>
-          <label className="block text-[13px] font-medium text-foreground mb-1">Name</label>
-          <input value={name} onChange={(e) => setName(e.target.value)} className={inputClass} />
-        </div>
-        <div className="flex gap-4">
-          <div className="flex-1">
-            <label className="block text-[13px] font-medium text-foreground mb-1">Cron Expression</label>
-            <input value={cronExpr} onChange={(e) => setCronExpr(e.target.value)} className={`${inputClass} font-mono`} />
-          </div>
-          <div className="flex-1">
-            <label className="block text-[13px] font-medium text-foreground mb-1">Timezone</label>
-            <select value={timezone} onChange={(e) => setTimezone(e.target.value)} className={inputClass}>
-              <option value="Europe/Berlin">Europe/Berlin</option>
-              <option value="UTC">UTC</option>
-            </select>
-          </div>
-        </div>
-        <div>
-          <label className="block text-[13px] font-medium text-foreground mb-1">Message / Payload</label>
-          <textarea value={message} onChange={(e) => setMessage(e.target.value)} rows={4} className={textareaClass} />
-        </div>
-        <div>
-          <label className="block text-[13px] font-medium text-foreground mb-1">Description</label>
-          <textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={2} className={textareaClass} />
-        </div>
-        <div className="flex gap-4">
-          <div className="flex-1">
-            <label className="block text-[13px] font-medium text-foreground mb-1">Model Override</label>
-            <input value={model} onChange={(e) => setModel(e.target.value)} placeholder="Leave empty for default" className={inputClass} />
-          </div>
-          <div className="flex-1">
-            <label className="block text-[13px] font-medium text-foreground mb-1">Session Target</label>
-            <input value={session} onChange={(e) => setSession(e.target.value)} className={inputClass} />
-          </div>
-        </div>
-        <div className="flex justify-end gap-2 pt-2">
-          <button onClick={onClose} className="px-4 py-2 text-[13px] font-medium text-muted-foreground hover:text-foreground">Cancel</button>
-          <button onClick={handleSave} disabled={saving || !name.trim()} className="px-4 py-2 bg-primary hover:opacity-90 disabled:opacity-50 text-primary-foreground text-[13px] font-semibold rounded-lg">
-            {saving ? 'Saving...' : 'Save Changes'}
-          </button>
-        </div>
-      </div>
-    </Modal>
   );
 }
