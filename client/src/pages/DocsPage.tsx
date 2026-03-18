@@ -154,7 +154,8 @@ export default function DocsPage() {
 
   const isPinned = useCallback((filePath: string) => pinnedPaths.includes(filePath), [pinnedPaths]);
 
-  const isDirty = content !== originalContent;
+  const [hasUserEdited, setHasUserEdited] = useState(false);
+  const isDirty = hasUserEdited && content !== originalContent;
 
   // Load tree
   useEffect(() => {
@@ -169,10 +170,16 @@ export default function DocsPage() {
     setExpanded((prev) => ({ ...prev, [path]: !prev[path] }));
   }, []);
 
+  // Track when user makes actual edits vs TipTap's initial parse
+  const handleEditorChange = useCallback((md: string) => {
+    setContent(md);
+    setHasUserEdited(true);
+  }, []);
+
   // Open file
   const handleSelect = useCallback(async (filePath: string) => {
-    if (activePath === filePath) return;
     setLoading(true);
+    setHasUserEdited(false);
     try {
       const data = await getDocFile(filePath);
       setActivePath(filePath);
@@ -193,6 +200,7 @@ export default function DocsPage() {
     try {
       const result = await saveDocFile(activePath, content);
       setOriginalContent(content);
+      setHasUserEdited(false);
       setLastSaved(result.modified);
     } catch (e) {
       console.error('Failed to save', e);
@@ -367,7 +375,7 @@ export default function DocsPage() {
               ) : (
                 <TipTapEditor
                   content={content}
-                  onChange={(md) => setContent(md)}
+                  onChange={handleEditorChange}
                 />
               )}
             </div>
