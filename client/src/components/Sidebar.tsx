@@ -5,6 +5,7 @@ const navItems = [
   { icon: '🤖', label: 'Agents', path: '/agents', disabled: true },
   { icon: '📡', label: 'Activity', path: '/activity', disabled: true },
   { icon: '✅', label: 'Tasks', path: '/tasks', disabled: false },
+  { icon: '📝', label: 'Docs', path: '/docs', disabled: false },
   { icon: '⚡', label: 'Skills', path: '/skills', disabled: true },
   { icon: '📈', label: 'Usage', path: '/usage', disabled: true },
 ];

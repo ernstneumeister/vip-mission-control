@@ -260,6 +260,73 @@ app.get('/api/activity/:taskId', (req, res) => {
   res.json(logs);
 });
 
+// ─── Docs / Editor ───
+const DOCS_ROOT = '/root/clawd';
+
+function getFileTree(dir, basePath = '') {
+  const items = [];
+  try {
+    const entries = fs.readdirSync(dir, { withFileTypes: true });
+    const excluded = ['node_modules', '.git', 'dist', '__pycache__', '.openclaw', '.cache', '.npm', '.config', '.local'];
+    for (const entry of entries) {
+      if (excluded.includes(entry.name)) continue;
+      if (entry.name.startsWith('.') && entry.name !== '.gitignore') continue;
+      const fullPath = path.join(dir, entry.name);
+      const relPath = path.join(basePath, entry.name);
+      if (entry.isDirectory()) {
+        const children = getFileTree(fullPath, relPath);
+        if (children.length > 0) {
+          items.push({ name: entry.name, path: relPath, type: 'dir', children });
+        }
+      } else if (/\.(md|txt|json|yml|yaml|sh|js|ts|css)$/i.test(entry.name)) {
+        try {
+          const stat = fs.statSync(fullPath);
+          items.push({ name: entry.name, path: relPath, type: 'file', size: stat.size, modified: stat.mtime });
+        } catch(e) {}
+      }
+    }
+  } catch(e) {}
+  items.sort((a, b) => {
+    if (a.type !== b.type) return a.type === 'dir' ? -1 : 1;
+    return a.name.localeCompare(b.name);
+  });
+  return items;
+}
+
+app.get('/api/docs/tree', (req, res) => {
+  res.json(getFileTree(DOCS_ROOT));
+});
+
+app.get('/api/docs/file', (req, res) => {
+  const filePath = req.query.path;
+  if (!filePath || filePath.includes('..') || path.isAbsolute(filePath)) {
+    return res.status(400).json({ error: 'Invalid path' });
+  }
+  const fullPath = path.join(DOCS_ROOT, filePath);
+  try {
+    const content = fs.readFileSync(fullPath, 'utf-8');
+    const stat = fs.statSync(fullPath);
+    res.json({ path: filePath, content, modified: stat.mtime, size: stat.size });
+  } catch(e) {
+    res.status(404).json({ error: 'File not found' });
+  }
+});
+
+app.put('/api/docs/file', (req, res) => {
+  const { path: filePath, content } = req.body;
+  if (!filePath || filePath.includes('..') || path.isAbsolute(filePath)) {
+    return res.status(400).json({ error: 'Invalid path' });
+  }
+  const fullPath = path.join(DOCS_ROOT, filePath);
+  try {
+    fs.writeFileSync(fullPath, content, 'utf-8');
+    const stat = fs.statSync(fullPath);
+    res.json({ path: filePath, modified: stat.mtime, size: stat.size, saved: true });
+  } catch(e) {
+    res.status(500).json({ error: 'Failed to save: ' + e.message });
+  }
+});
+
 // SPA fallback
 app.get('*', (req, res) => {
   res.sendFile(path.join(clientDist, 'index.html'));

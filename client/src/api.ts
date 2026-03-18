@@ -52,6 +52,18 @@ export const deleteRecurring = (id: number) =>
 // Activity
 export const getActivity = (taskId: number) => fetchJSON<ActivityLog[]>(`/activity/${taskId}`);
 
+// Docs
+export const getDocTree = () => fetchJSON<any[]>('/docs/tree');
+export const getDocFile = (filePath: string) =>
+  fetchJSON<{ path: string; content: string; modified: string; size: number }>(
+    `/docs/file?path=${encodeURIComponent(filePath)}`
+  );
+export const saveDocFile = (filePath: string, content: string) =>
+  fetchJSON<{ saved: boolean; modified: string; size: number }>('/docs/file', {
+    method: 'PUT',
+    body: JSON.stringify({ path: filePath, content }),
+  });
+
 // Avatar upload
 export const uploadAgentAvatar = async (agentId: string, file: File): Promise<Agent> => {
   const formData = new FormData();

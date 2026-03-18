@@ -4,6 +4,7 @@ import Sidebar from './components/Sidebar';
 import Header from './components/Header';
 import TasksPage from './pages/TasksPage';
 import TaskDetail from './pages/TaskDetail';
+import DocsPage from './pages/DocsPage';
 import type { Agent } from './types';
 import { getAgents } from './api';
 
@@ -25,6 +26,7 @@ export default function App() {
             <Route path="/" element={<Navigate to="/tasks" replace />} />
             <Route path="/tasks" element={<TasksPage agents={agents} searchQuery={searchQuery} />} />
             <Route path="/tasks/:id" element={<TaskDetail agents={agents} />} />
+            <Route path="/docs" element={<DocsPage />} />
           </Routes>
         </main>
       </div>
