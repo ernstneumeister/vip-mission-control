@@ -73,6 +73,14 @@ const COMMANDS: CommandItem[] = [
     },
   },
   {
+    title: 'Table',
+    description: 'Insert a table',
+    icon: '⊞',
+    command: (editor, range) => {
+      editor.chain().focus().deleteRange(range).insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run();
+    },
+  },
+  {
     title: 'Divider',
     description: 'Horizontal line',
     icon: '—',

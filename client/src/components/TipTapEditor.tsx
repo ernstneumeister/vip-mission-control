@@ -3,6 +3,10 @@ import { BubbleMenu } from '@tiptap/react/menus';
 import StarterKit from '@tiptap/starter-kit';
 import Placeholder from '@tiptap/extension-placeholder';
 import Typography from '@tiptap/extension-typography';
+import Table from '@tiptap/extension-table';
+import TableRow from '@tiptap/extension-table-row';
+import TableHeader from '@tiptap/extension-table-header';
+import TableCell from '@tiptap/extension-table-cell';
 import { Markdown } from 'tiptap-markdown';
 import GlobalDragHandle from 'tiptap-extension-global-drag-handle';
 import { useEffect, useRef } from 'react';
@@ -37,6 +41,10 @@ export default function TipTapEditor({ content, onChange, editable = true }: Pro
       SlashCommand.configure({
         suggestion: getSlashCommandSuggestion(),
       }),
+      Table.configure({ resizable: false }),
+      TableRow,
+      TableHeader,
+      TableCell,
       GlobalDragHandle.configure({
         dragHandleWidth: 20,
       }),
