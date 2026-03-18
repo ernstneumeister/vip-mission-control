@@ -175,7 +175,7 @@ export default function DocsPage() {
   return (
     <div className="flex h-full overflow-hidden">
       {/* Left: File tree */}
-      <div className="w-[250px] flex-shrink-0 bg-card border-r border-border flex flex-col overflow-hidden">
+      <div className="w-[250px] flex-shrink-0 bg-background border-r border-border flex flex-col overflow-hidden">
         <div className="px-3 py-2.5 border-b border-border">
           <h3 className="text-[13px] font-semibold text-muted-foreground uppercase tracking-wide">
             Files
@@ -229,11 +229,11 @@ export default function DocsPage() {
       </div>
 
       {/* Right: Editor */}
-      <div className="flex-1 flex flex-col overflow-hidden bg-card" ref={editorRef}>
+      <div className="flex-1 flex flex-col overflow-hidden bg-background" ref={editorRef}>
         {activePath ? (
           <>
             {/* Toolbar */}
-            <div className="flex items-center justify-between px-4 py-2 border-b border-border bg-card flex-shrink-0">
+            <div className="flex items-center justify-between px-4 py-2 border-b border-border bg-background flex-shrink-0">
               <div className="flex items-center gap-2 min-w-0">
                 {breadcrumb && (
                   <div className="text-[12px] text-muted-foreground truncate flex items-center gap-1">
