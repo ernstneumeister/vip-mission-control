@@ -27,7 +27,7 @@ export default function Sidebar() {
   return (
     <aside className={`${collapsed ? 'w-[52px]' : 'w-[240px]'} h-screen bg-sidebar-bg border-r border-border/30 flex flex-col flex-shrink-0 transition-all duration-200`}>
       {/* Header */}
-      <div className={`flex items-center ${collapsed ? 'justify-center px-2' : 'justify-between px-4'} py-4 border-b border-border/30`}>
+      <div className={`flex items-center ${collapsed ? 'justify-center px-2' : 'justify-between px-4'} h-[50px] border-b border-border/30`}>
         {!collapsed && (
           <Link to="/" className="text-[16px] font-bold text-foreground no-underline flex items-center gap-1.5">
             🎯 <span>Mission Control</span>
