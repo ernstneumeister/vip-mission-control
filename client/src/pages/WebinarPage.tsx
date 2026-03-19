@@ -27,26 +27,136 @@ function formatDateTime(iso: string) {
   return d.toLocaleString('de-DE', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit', year: 'numeric' });
 }
 
-function MiniBar({ data, maxVal }: { data: { date: string; count: number }[]; maxVal: number }) {
-  if (!data.length) return <div className="text-muted-foreground text-sm py-8 text-center">Noch keine Anmeldungen</div>;
-  const barMax = Math.max(maxVal, ...data.map(d => d.count));
-  const fewBars = data.length < 7;
-  return (
-    <div className={`flex items-end gap-1 h-[160px] ${fewBars ? 'justify-center' : ''}`}>
-      {data.map((d, i) => (
-        <div
-          key={i}
-          className={`flex flex-col items-center gap-1 ${fewBars ? '' : 'flex-1'} min-w-0`}
-          style={fewBars ? { minWidth: '40px', maxWidth: '60px', flex: '1 1 auto' } : undefined}
-        >
-          <span className="text-[10px] text-muted-foreground font-medium">{d.count}</span>
-          <div
-            className="w-full rounded-t bg-primary/80 transition-all duration-300 min-h-[2px]"
-            style={{ height: `${Math.max(2, (d.count / barMax) * 100)}px` }}
-          />
-          <span className="text-[9px] text-muted-foreground truncate w-full text-center">{formatDate(d.date)}</span>
+type ChartFilter = '7' | '14' | '30' | 'all';
+
+function getTickStep(maxVal: number): number {
+  const steps = [1, 2, 5, 10, 20, 50, 100, 200, 500, 1000];
+  const ideal = maxVal / 4;
+  return steps.find(s => s >= ideal) ?? Math.ceil(ideal / 100) * 100;
+}
+
+function fillDays(data: { date: string; count: number }[], days: number): { date: string; count: number }[] {
+  const map = new Map(data.map(d => [d.date, d.count]));
+  const result: { date: string; count: number }[] = [];
+  const now = new Date();
+  for (let i = days - 1; i >= 0; i--) {
+    const d = new Date(now);
+    d.setDate(d.getDate() - i);
+    const key = d.toISOString().slice(0, 10);
+    result.push({ date: key, count: map.get(key) ?? 0 });
+  }
+  return result;
+}
+
+function BarChart({ data }: { data: { date: string; count: number }[] }) {
+  const [filter, setFilter] = useState<ChartFilter>('7');
+  const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
+
+  const chartData = (() => {
+    if (filter === 'all') return data;
+    const days = Number(filter);
+    return fillDays(data, days);
+  })();
+
+  const filterSelect = (
+    <select
+      value={filter}
+      onChange={e => setFilter(e.target.value as ChartFilter)}
+      className="text-xs bg-muted border border-border rounded-md px-2 py-1 text-foreground cursor-pointer focus:outline-none focus:ring-1 focus:ring-primary"
+    >
+      <option value="7">Letzte 7 Tage</option>
+      <option value="14">Letzte 14 Tage</option>
+      <option value="30">Letzte 30 Tage</option>
+      <option value="all">Alle</option>
+    </select>
+  );
+
+  if (!data.length) {
+    return (
+      <div>
+        <div className="flex justify-end mb-3">{filterSelect}</div>
+        <div className="text-muted-foreground text-sm py-12 text-center">
+          Noch keine Anmeldungen – wird nach dem ersten Tag sichtbar
         </div>
-      ))}
+      </div>
+    );
+  }
+
+  const maxCount = Math.max(1, ...chartData.map(d => d.count));
+  const step = getTickStep(maxCount);
+  const yMax = Math.ceil(maxCount / step) * step || step;
+  const ticks: number[] = [];
+  for (let v = 0; v <= yMax; v += step) ticks.push(v);
+
+  const CHART_H = 200;
+  const fewBars = chartData.length <= 2;
+
+  return (
+    <div>
+      <div className="flex justify-end mb-3">{filterSelect}</div>
+      <div className="relative" style={{ paddingLeft: '36px' }}>
+        {/* Y-axis gridlines + labels */}
+        {ticks.map(v => {
+          const bottom = (v / yMax) * CHART_H;
+          return (
+            <div key={v} className="absolute left-0 right-0" style={{ bottom: `${bottom}px` }}>
+              <span className="absolute text-[10px] text-muted-foreground font-mono" style={{ left: '-36px', width: '32px', textAlign: 'right', transform: 'translateY(50%)' }}>
+                {v}
+              </span>
+              <div className="border-t border-border/50 w-full" />
+            </div>
+          );
+        })}
+
+        {/* Bars */}
+        <div
+          className={`flex items-end ${fewBars ? 'justify-center' : ''}`}
+          style={{ height: `${CHART_H}px`, gap: chartData.length > 20 ? '2px' : '4px' }}
+        >
+          {chartData.map((d, i) => {
+            const barH = d.count > 0 ? Math.max(4, (d.count / yMax) * CHART_H * 0.9) : 0;
+            return (
+              <div
+                key={i}
+                className={`relative flex flex-col items-center justify-end ${fewBars ? '' : 'flex-1'}`}
+                style={fewBars ? { minWidth: '30px', maxWidth: '80px', flex: '1 1 auto' } : { minWidth: '10px' }}
+                onMouseEnter={() => setHoveredIdx(i)}
+                onMouseLeave={() => setHoveredIdx(null)}
+              >
+                {/* Hover value */}
+                {hoveredIdx === i && d.count > 0 && (
+                  <span className="absolute -top-5 text-[11px] font-semibold text-foreground bg-card border border-border rounded px-1.5 py-0.5 shadow-sm z-10 whitespace-nowrap">
+                    {d.count}
+                  </span>
+                )}
+                <div
+                  className="w-full rounded-t-sm bg-primary transition-all duration-300 hover:bg-primary/80 cursor-default"
+                  style={{ height: `${barH}px`, minHeight: d.count > 0 ? '4px' : '0px' }}
+                />
+              </div>
+            );
+          })}
+        </div>
+
+        {/* X-axis labels */}
+        <div className={`flex mt-1.5 ${fewBars ? 'justify-center' : ''}`} style={{ gap: chartData.length > 20 ? '2px' : '4px' }}>
+          {chartData.map((d, i) => {
+            // Show every label for <=14 bars, every 2nd for <=30, every 3rd for more
+            const showLabel = chartData.length <= 14 || (chartData.length <= 30 ? i % 2 === 0 : i % 3 === 0) || i === chartData.length - 1;
+            return (
+              <div
+                key={i}
+                className={`text-center ${fewBars ? '' : 'flex-1'}`}
+                style={fewBars ? { minWidth: '30px', maxWidth: '80px', flex: '1 1 auto' } : { minWidth: '10px' }}
+              >
+                <span className="text-[9px] text-muted-foreground">
+                  {showLabel ? formatDate(d.date) : ''}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+      </div>
     </div>
   );
 }
@@ -193,8 +303,10 @@ export default function WebinarPage() {
       <div className="grid grid-cols-3 gap-4">
         {/* Daily Chart */}
         <div className="col-span-2 bg-card border border-border rounded-xl p-5 shadow-sm">
-          <h3 className="text-sm font-semibold text-foreground mb-4">Anmeldungen pro Tag</h3>
-          <MiniBar data={stats.dailyData} maxVal={20} />
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-sm font-semibold text-foreground">Anmeldungen pro Tag</h3>
+          </div>
+          <BarChart data={stats.dailyData} />
         </div>
 
         {/* Milestones */}
