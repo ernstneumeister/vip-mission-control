@@ -8,10 +8,38 @@ import multer from 'multer';
 import db from './db.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+// Security: sanitize shell inputs to prevent command injection
+function sanitizeShellArg(str) {
+  if (typeof str !== 'string') return '';
+  // Remove any shell-dangerous characters
+  return str.replace(/[;&|`$(){}!<>\\\"'\n\r]/g, '');
+}
+
+function isValidId(id) {
+  // IDs should only contain alphanumeric, hyphens, underscores
+  return /^[a-zA-Z0-9_-]+$/.test(id);
+}
+
+function isValidEnvKey(key) {
+  // Env keys: uppercase letters, numbers, underscores
+  return /^[A-Za-z_][A-Za-z0-9_]*$/.test(key);
+}
+
 const app = express();
 const PORT = process.env.PORT || 3111;
 
-app.use(cors());
+app.use(cors({
+  origin: (origin, callback) => {
+    // Allow requests with no origin (same-origin, curl, etc.)
+    if (!origin) return callback(null, true);
+    // Allow localhost and Tailscale IPs (100.x.x.x) and private networks
+    if (/^https?:\/\/(localhost|127\.0\.0\.1|100\.\d+\.\d+\.\d+|10\.\d+\.\d+\.\d+|192\.168\.\d+\.\d+|0\.0\.0\.0)(:\d+)?$/.test(origin)) {
+      return callback(null, true);
+    }
+    callback(new Error('CORS not allowed'));
+  }
+}));
 app.use(express.json());
 
 // Serve static client build
@@ -50,6 +78,13 @@ app.post('/api/agents/:id/avatar', avatarUpload.single('avatar'), (req, res) => 
   const agent = db.prepare('SELECT * FROM agents WHERE id = ?').get(agentId);
   if (!agent) return res.status(404).json({ error: 'Agent not found' });
   if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
+
+  const allowedMimes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml'];
+  if (!allowedMimes.includes(req.file.mimetype)) {
+    // Clean up uploaded file
+    try { fs.unlinkSync(req.file.path); } catch(e) {}
+    return res.status(400).json({ error: 'Only image files allowed' });
+  }
 
   const ext = path.extname(req.file.originalname) || '.jpg';
   const avatarUrl = `/avatars/${agentId}${ext}`;
@@ -336,7 +371,8 @@ app.get('/api/cron/:id', (req, res) => {
 const runsCache = {};
 app.get('/api/cron/:id/runs', (req, res) => {
   try {
-    const limit = req.query.limit || '20';
+    if (!isValidId(req.params.id)) return res.status(400).json({ error: 'Invalid job ID' });
+    const limit = parseInt(req.query.limit) || 20;
     const cacheKey = `${req.params.id}:${limit}`;
     const now = Date.now();
     const cached = runsCache[cacheKey];
@@ -354,15 +390,16 @@ app.get('/api/cron/:id/runs', (req, res) => {
 
 app.patch('/api/cron/:id', (req, res) => {
   try {
+    if (!isValidId(req.params.id)) return res.status(400).json({ error: 'Invalid job ID' });
     const { name, schedule, timezone, message, description, model, session } = req.body;
     const args = [];
-    if (name) args.push(`--name "${name}"`);
-    if (schedule) args.push(`--cron "${schedule}"`);
-    if (timezone) args.push(`--tz "${timezone}"`);
-    if (message) args.push(`--message "${message.replace(/"/g, '\\"')}"`);
-    if (description) args.push(`--description "${description.replace(/"/g, '\\"')}"`);
-    if (model) args.push(`--model "${model}"`);
-    if (session) args.push(`--session "${session}"`);
+    if (name) args.push(`--name "${sanitizeShellArg(name)}"`);
+    if (schedule) args.push(`--cron "${sanitizeShellArg(schedule)}"`);
+    if (timezone) args.push(`--tz "${sanitizeShellArg(timezone)}"`);
+    if (message) args.push(`--message "${sanitizeShellArg(message)}"`);
+    if (description) args.push(`--description "${sanitizeShellArg(description)}"`);
+    if (model) args.push(`--model "${sanitizeShellArg(model)}"`);
+    if (session) args.push(`--session "${sanitizeShellArg(session)}"`);
 
     if (args.length === 0) return res.status(400).json({ error: 'No fields to update' });
 
@@ -377,6 +414,7 @@ app.patch('/api/cron/:id', (req, res) => {
 
 app.post('/api/cron/:id/run', (req, res) => {
   try {
+    if (!isValidId(req.params.id)) return res.status(400).json({ error: 'Invalid job ID' });
     execSync(`openclaw cron run ${req.params.id}`, { encoding: 'utf-8', timeout: 15000 });
     res.json({ success: true });
   } catch(e) {
@@ -386,6 +424,7 @@ app.post('/api/cron/:id/run', (req, res) => {
 
 app.post('/api/cron/:id/enable', (req, res) => {
   try {
+    if (!isValidId(req.params.id)) return res.status(400).json({ error: 'Invalid job ID' });
     execSync(`openclaw cron enable ${req.params.id}`, { encoding: 'utf-8', timeout: 10000 });
     invalidateCronCache();
     res.json({ success: true });
@@ -396,6 +435,7 @@ app.post('/api/cron/:id/enable', (req, res) => {
 
 app.post('/api/cron/:id/disable', (req, res) => {
   try {
+    if (!isValidId(req.params.id)) return res.status(400).json({ error: 'Invalid job ID' });
     execSync(`openclaw cron disable ${req.params.id}`, { encoding: 'utf-8', timeout: 10000 });
     invalidateCronCache();
     res.json({ success: true });
@@ -406,6 +446,7 @@ app.post('/api/cron/:id/disable', (req, res) => {
 
 app.delete('/api/cron/:id', (req, res) => {
   try {
+    if (!isValidId(req.params.id)) return res.status(400).json({ error: 'Invalid job ID' });
     execSync(`openclaw cron rm ${req.params.id}`, { encoding: 'utf-8', timeout: 10000 });
     invalidateCronCache();
     res.json({ success: true });
@@ -440,6 +481,7 @@ app.get('/api/env', (req, res) => {
 
 app.get('/api/env/:key', (req, res) => {
   try {
+    if (!isValidEnvKey(req.params.key)) return res.status(400).json({ error: 'Invalid key name' });
     const configPath = path.join(process.env.HOME || '/root', '.openclaw', 'openclaw.json');
     const config = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
     const value = config?.env?.vars?.[req.params.key];
@@ -455,8 +497,10 @@ app.put('/api/env/:key', (req, res) => {
     const { value } = req.body;
     if (value === undefined || value === null) return res.status(400).json({ error: 'value required' });
     const key = req.params.key;
+    if (!isValidEnvKey(key)) return res.status(400).json({ error: 'Invalid key name' });
+    const safeValue = String(value).replace(/[;&|`$(){}!<>\\]/g, '');
     // Use openclaw config set for safe writing
-    execSync(`openclaw config set "env.vars.${key}" "${String(value).replace(/"/g, '\\"')}"`, { encoding: 'utf-8', timeout: 10000 });
+    execSync(`openclaw config set "env.vars.${key}" "${safeValue.replace(/"/g, '\\"')}"`, { encoding: 'utf-8', timeout: 10000 });
     res.json({ success: true, key });
   } catch(e) {
     res.status(500).json({ error: 'Failed to save: ' + e.message });
@@ -465,6 +509,7 @@ app.put('/api/env/:key', (req, res) => {
 
 app.delete('/api/env/:key', (req, res) => {
   try {
+    if (!isValidEnvKey(req.params.key)) return res.status(400).json({ error: 'Invalid key name' });
     execSync(`openclaw config unset "env.vars.${req.params.key}"`, { encoding: 'utf-8', timeout: 10000 });
     res.json({ success: true });
   } catch(e) {
@@ -515,6 +560,15 @@ app.get('/api/docs/file', (req, res) => {
     return res.status(400).json({ error: 'Invalid path' });
   }
   const fullPath = path.join(DOCS_ROOT, filePath);
+  // Resolve symlinks and verify path is within DOCS_ROOT
+  try {
+    const resolved = fs.realpathSync(fullPath);
+    if (!resolved.startsWith(DOCS_ROOT)) {
+      return res.status(403).json({ error: 'Access denied' });
+    }
+  } catch(e) {
+    return res.status(404).json({ error: 'File not found' });
+  }
   try {
     const content = fs.readFileSync(fullPath, 'utf-8');
     const stat = fs.statSync(fullPath);
@@ -530,6 +584,16 @@ app.put('/api/docs/file', (req, res) => {
     return res.status(400).json({ error: 'Invalid path' });
   }
   const fullPath = path.join(DOCS_ROOT, filePath);
+  // Ensure parent dir is within DOCS_ROOT
+  const parentDir = path.dirname(fullPath);
+  try {
+    const resolvedParent = fs.realpathSync(parentDir);
+    if (!resolvedParent.startsWith(DOCS_ROOT)) {
+      return res.status(403).json({ error: 'Access denied' });
+    }
+  } catch(e) {
+    return res.status(400).json({ error: 'Invalid path' });
+  }
   try {
     fs.writeFileSync(fullPath, content, 'utf-8');
     const stat = fs.statSync(fullPath);
