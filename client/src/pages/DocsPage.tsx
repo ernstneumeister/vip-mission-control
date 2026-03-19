@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import TipTapEditor from '../components/TipTapEditor';
 import { getDocTree, getDocFile, saveDocFile } from '../api';
 import { Folder, FolderOpen, File, FileCode, FileText, Settings as GearIcon, Pin } from '../components/Icons';
@@ -129,6 +130,7 @@ function DragGrip() {
 
 export default function DocsPage() {
   const [tree, setTree] = useState<TreeNode[]>([]);
+  const [searchParams, setSearchParams] = useSearchParams();
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
   const [activePath, setActivePath] = useState<string | null>(null);
   const [content, setContent] = useState<string>('');
@@ -242,12 +244,29 @@ export default function DocsPage() {
       setContent(data.content);
       setOriginalContent(data.content);
       setLastSaved(data.modified);
+      // Update URL with file path for deep linking
+      setSearchParams({ file: filePath }, { replace: true });
     } catch (e) {
       console.error('Failed to load file', e);
     } finally {
       setLoading(false);
     }
-  }, [activePath]);
+  }, [activePath, setSearchParams]);
+
+  // Load file from URL query param on mount
+  useEffect(() => {
+    const fileParam = searchParams.get('file');
+    if (fileParam && !activePath) {
+      handleSelect(fileParam);
+      // Auto-expand parent folders
+      const parts = fileParam.split('/');
+      const expanded: Record<string, boolean> = {};
+      for (let i = 1; i < parts.length; i++) {
+        expanded[parts.slice(0, i).join('/')] = true;
+      }
+      setExpanded(prev => ({ ...prev, ...expanded }));
+    }
+  }, [searchParams]);
 
   // Save
   const handleSave = useCallback(async () => {
