@@ -20,7 +20,7 @@ export default function TaskDetail({ agents }: Props) {
     title: '',
     description: '',
     instructions: '',
-    agent_id: 'henry',
+    agent_id: 'main',
     status: 'scheduled',
     scheduled_for: '',
   });

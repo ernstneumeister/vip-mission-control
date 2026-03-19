@@ -680,7 +680,7 @@ function NewTaskModal({ open, onClose, agents, onCreated }: { open: boolean; onC
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [instructions, setInstructions] = useState('');
-  const [agentId, setAgentId] = useState('henry');
+  const [agentId, setAgentId] = useState('main');
   const [scheduledFor, setScheduledFor] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -688,7 +688,7 @@ function NewTaskModal({ open, onClose, agents, onCreated }: { open: boolean; onC
     setTitle('');
     setDescription('');
     setInstructions('');
-    setAgentId('henry');
+    setAgentId('main');
     setScheduledFor('');
   };
 
@@ -726,7 +726,7 @@ function NewTemplateModal({ open, onClose, agents, onCreated }: { open: boolean;
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [instructions, setInstructions] = useState('');
-  const [agentId, setAgentId] = useState('henry');
+  const [agentId, setAgentId] = useState('main');
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async () => {
@@ -737,7 +737,7 @@ function NewTemplateModal({ open, onClose, agents, onCreated }: { open: boolean;
     setTitle('');
     setDescription('');
     setInstructions('');
-    setAgentId('henry');
+    setAgentId('main');
     onClose();
     onCreated();
   };
@@ -765,7 +765,7 @@ function EditTemplateModal({ open, template, onClose, agents, onSaved }: {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [instructions, setInstructions] = useState('');
-  const [agentId, setAgentId] = useState('henry');
+  const [agentId, setAgentId] = useState('main');
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -801,7 +801,7 @@ function NewRecurringModal({ open, onClose, agents, onCreated }: { open: boolean
   const [title, setTitle] = useState('');
   const [cronExpr, setCronExpr] = useState('0 * * * *');
   const [timezone, setTimezone] = useState('Europe/Berlin');
-  const [agentId, setAgentId] = useState('henry');
+  const [agentId, setAgentId] = useState('main');
   const [nextRun, setNextRun] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -813,7 +813,7 @@ function NewRecurringModal({ open, onClose, agents, onCreated }: { open: boolean
     setTitle('');
     setCronExpr('0 * * * *');
     setTimezone('Europe/Berlin');
-    setAgentId('henry');
+    setAgentId('main');
     setNextRun('');
     onClose();
     onCreated();
@@ -852,7 +852,7 @@ function EditRecurringModal({ open, recurring, onClose, agents, onSaved }: {
   const [title, setTitle] = useState('');
   const [cronExpr, setCronExpr] = useState('0 * * * *');
   const [timezone, setTimezone] = useState('Europe/Berlin');
-  const [agentId, setAgentId] = useState('henry');
+  const [agentId, setAgentId] = useState('main');
   const [nextRun, setNextRun] = useState('');
   const [active, setActive] = useState(1);
   const [loading, setLoading] = useState(false);

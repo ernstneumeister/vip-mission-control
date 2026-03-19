@@ -16,7 +16,7 @@ Replicate the BMHQ dashboard style. Clean, modern, minimal SaaS dashboard.
   - Hover: bg #F3F4F6, border-radius 6px
 - **Items (v0.1):** Only "Tasks" is active/clickable. Others grayed out as placeholders:
   - Dashboard, Agents, Activity, **Tasks** (active), Skills, Usage
-- **Bottom:** "Henry 🦝" user section with Settings (grayed out)
+- **Bottom:** "Main Agent 🦝" user section with Settings (grayed out)
 
 ## Top Header
 - **Left:** Date/time (13px, monospace-ish, #6B7280)
@@ -50,7 +50,7 @@ Replicate the BMHQ dashboard style. Clean, modern, minimal SaaS dashboard.
 - Active dot: #10B981 (green)
 
 ## Agent Colors
-- Henry (Main): #6366f1 (indigo), emoji 🦝
+- Main Agent (Main): #6366f1 (indigo), emoji 🦝
 - Codex (Coding): #10b981 (green), emoji 🤖
 - Research: #f59e0b (amber), emoji 🔍
 

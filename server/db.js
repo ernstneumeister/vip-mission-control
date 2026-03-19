@@ -78,7 +78,7 @@ db.exec(`
 const agentCount = db.prepare('SELECT COUNT(*) as c FROM agents').get().c;
 if (agentCount === 0) {
   const insertAgent = db.prepare('INSERT INTO agents (id, name, role, model, avatar, color) VALUES (?, ?, ?, ?, ?, ?)');
-  insertAgent.run('henry', 'Henry', 'Orchestrator (Main Agent)', 'claude-opus-4-6', '🦝', '#6366f1');
+  insertAgent.run('main', 'Main Agent', 'Orchestrator (Main Agent)', 'claude-opus-4-6', '🦝', '#6366f1');
   insertAgent.run('codex', 'Codex', 'Coding Sub-Agent', 'chatgpt-5.4', '🤖', '#10b981');
   insertAgent.run('research', 'Research', 'Research Sub-Agent', 'sonnet', '🔍', '#f59e0b');
 }
@@ -87,23 +87,20 @@ if (agentCount === 0) {
 const recurringCount = db.prepare('SELECT COUNT(*) as c FROM recurring').get().c;
 if (recurringCount === 0) {
   const insertRecurring = db.prepare('INSERT INTO recurring (title, cron_expr, timezone, agent_id, active, next_run) VALUES (?, ?, ?, ?, ?, ?)');
-  insertRecurring.run('Sebi Story Scraper', '0 20 * * *', 'UTC', 'henry', 1, '2026-03-18T20:00:00Z');
-  insertRecurring.run('OpenClaw Auto-Update', '22 2 * * *', 'Europe/Berlin', 'henry', 1, '2026-03-19T01:22:00Z');
-  insertRecurring.run('Nachtschicht', '0 3 * * *', 'Europe/Berlin', 'henry', 1, '2026-03-19T02:00:00Z');
-  insertRecurring.run('Morgenbericht', '0 6 * * *', 'Europe/Berlin', 'henry', 1, '2026-03-19T05:00:00Z');
-  insertRecurring.run('System Auto-Update Script', '0 4 * * *', 'UTC', 'henry', 1, '2026-03-19T04:00:00Z');
-  insertRecurring.run('System Auto-Backup Git', '0 23 * * *', 'UTC', 'henry', 1, '2026-03-18T23:00:00Z');
+  insertRecurring.run('OpenClaw Auto-Update', '22 2 * * *', 'Europe/Berlin', 'main', 1, '2026-03-19T01:22:00Z');
+  insertRecurring.run('System Auto-Update Script', '0 4 * * *', 'UTC', 'main', 1, '2026-03-19T04:00:00Z');
+  insertRecurring.run('System Auto-Backup Git', '0 23 * * *', 'UTC', 'main', 1, '2026-03-18T23:00:00Z');
 }
 
 // Seed templates
 const templateCount = db.prepare('SELECT COUNT(*) as c FROM templates').get().c;
 if (templateCount === 0) {
   const insertTemplate = db.prepare('INSERT INTO templates (title, description, instructions, agent_id) VALUES (?, ?, ?, ?)');
-  insertTemplate.run('Content Development', 'Use the content-development skill and carefully read the brief', 'Read the content brief from the project folder, develop the content following the brand voice guidelines, and deliver as a Notion page.', 'henry');
+  insertTemplate.run('Content Development', 'Use the content-development skill and carefully read the brief', 'Read the content brief from the project folder, develop the content following the brand voice guidelines, and deliver as a Notion page.', 'main');
   insertTemplate.run('Code Review', 'Review PR and provide detailed feedback', 'Clone the repository, check out the PR branch, review all changes for bugs, style issues, and potential improvements. Post review comments.', 'codex');
   insertTemplate.run('Competitor Analysis', 'Research competitor activities and summarize findings', 'Scrape competitor social media profiles, analyze their recent content strategy, pricing changes, and new features. Compile into a report.', 'research');
-  insertTemplate.run('YouTube Pipeline', 'Process raw video through the full YouTube pipeline', 'Run VAD silence removal, transcription, AI metadata generation, and Auphonic audio enhancement. Deliver final package ready for upload.', 'henry');
-  insertTemplate.run('Newsletter Draft', 'Create weekly newsletter draft in Kit', 'Review recent content, extract key insights, write newsletter copy following Ernst style guide, create draft in Kit.', 'henry');
+  insertTemplate.run('YouTube Pipeline', 'Process raw video through the full YouTube pipeline', 'Run VAD silence removal, transcription, AI metadata generation, and Auphonic audio enhancement. Deliver final package ready for upload.', 'main');
+  insertTemplate.run('Newsletter Draft', 'Create weekly newsletter draft in Kit', 'Review recent content, extract key insights, write newsletter copy following brand style guide, create draft in Kit.', 'main');
 }
 
 // No task/activity seeds - tasks are created manually or via the UI
@@ -112,7 +109,7 @@ if (templateCount === 0) {
 try { db.exec("ALTER TABLE agents ADD COLUMN avatar_url TEXT"); } catch(e) {}
 
 // Set default avatar_url values
-db.prepare("UPDATE agents SET avatar_url = ? WHERE id = ? AND avatar_url IS NULL").run('/avatars/henry.jpg', 'henry');
+db.prepare("UPDATE agents SET avatar_url = ? WHERE id = ? AND avatar_url IS NULL").run('/avatars/main.jpg', 'main');
 db.prepare("UPDATE agents SET avatar_url = ? WHERE id = ? AND avatar_url IS NULL").run('/avatars/codex.svg', 'codex');
 db.prepare("UPDATE agents SET avatar_url = ? WHERE id = ? AND avatar_url IS NULL").run('/avatars/research.svg', 'research');
 

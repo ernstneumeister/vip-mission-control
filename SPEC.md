@@ -92,7 +92,7 @@ When clicking a task, navigate to `/tasks/:id` with:
 Pre-seeded with our actual setup:
 ```json
 [
-  { "id": "henry", "name": "Henry", "role": "Orchestrator (Main Agent)", "model": "claude-opus-4-6", "avatar": "🦝", "color": "#6366f1" },
+  { "id": "main", "name": "Main Agent", "role": "Orchestrator (Main Agent)", "model": "claude-opus-4-6", "avatar": "🦝", "color": "#6366f1" },
   { "id": "codex", "name": "Codex", "role": "Coding Sub-Agent", "model": "chatgpt-5.4", "avatar": "🤖", "color": "#10b981" },
   { "id": "research", "name": "Research", "role": "Research Sub-Agent", "model": "sonnet", "avatar": "🔍", "color": "#f59e0b" }
 ]
@@ -162,10 +162,7 @@ CREATE TABLE activity_log (
 
 ## Seed Data
 Pre-populate with our actual cron jobs as recurring schedules:
-- Sebi Story Scraper | 0 20 * * * UTC | Henry
-- OpenClaw Auto-Update | 22 2 * * * Europe/Berlin | Henry
-- Nachtschicht | 0 3 * * * Europe/Berlin | Henry
-- Morgenbericht | 0 6 * * * Europe/Berlin | Henry
+- OpenClaw Auto-Update | 22 2 * * * Europe/Berlin | Main Agent
 - System Crontab: Auto-Update Script | 0 4 * * * UTC | System
 - System Crontab: Auto-Backup Git | 0 23 * * * UTC | System
 
