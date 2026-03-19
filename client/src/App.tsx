@@ -7,6 +7,7 @@ import TaskDetail from './pages/TaskDetail';
 import CronDetailPage from './pages/CronDetailPage';
 import DocsPage from './pages/DocsPage';
 import WebinarPage from './pages/WebinarPage';
+import EnvPage from './pages/EnvPage';
 import type { Agent } from './types';
 import { getAgents } from './api';
 
