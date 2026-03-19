@@ -117,6 +117,16 @@ function FileTreeItem({
   );
 }
 
+function DragGrip() {
+  return (
+    <svg width="10" height="14" viewBox="0 0 10 14" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="3" cy="2" r="1.2" /><circle cx="7" cy="2" r="1.2" />
+      <circle cx="3" cy="7" r="1.2" /><circle cx="7" cy="7" r="1.2" />
+      <circle cx="3" cy="12" r="1.2" /><circle cx="7" cy="12" r="1.2" />
+    </svg>
+  );
+}
+
 export default function DocsPage() {
   const [tree, setTree] = useState<TreeNode[]>([]);
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
@@ -128,6 +138,11 @@ export default function DocsPage() {
   const [loading, setLoading] = useState(false);
   const [treeLoading, setTreeLoading] = useState(true);
   const editorRef = useRef<HTMLDivElement>(null);
+
+  // Drag & Drop state for pinned files
+  const dragIndexRef = useRef<number | null>(null);
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+  const [draggingIndex, setDraggingIndex] = useState<number | null>(null);
 
   const [pinnedPaths, setPinnedPaths] = useState<string[]>(() => {
     try {
@@ -153,6 +168,47 @@ export default function DocsPage() {
   }, []);
 
   const isPinned = useCallback((filePath: string) => pinnedPaths.includes(filePath), [pinnedPaths]);
+
+  // Drag & Drop handlers for pinned files reordering
+  const handlePinDragStart = useCallback((e: React.DragEvent, index: number) => {
+    dragIndexRef.current = index;
+    setDraggingIndex(index);
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', `pinned-reorder-${index}`);
+  }, []);
+
+  const handlePinDragOver = useCallback((e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    if (dragIndexRef.current === null) return;
+    setDragOverIndex(index);
+  }, []);
+
+  const handlePinDrop = useCallback((e: React.DragEvent, dropIndex: number) => {
+    e.preventDefault();
+    const fromIndex = dragIndexRef.current;
+    if (fromIndex === null || fromIndex === dropIndex) {
+      setDragOverIndex(null);
+      setDraggingIndex(null);
+      dragIndexRef.current = null;
+      return;
+    }
+    setPinnedPaths(prev => {
+      const next = [...prev];
+      const [moved] = next.splice(fromIndex, 1);
+      next.splice(dropIndex, 0, moved);
+      return next;
+    });
+    setDragOverIndex(null);
+    setDraggingIndex(null);
+    dragIndexRef.current = null;
+  }, []);
+
+  const handlePinDragEnd = useCallback(() => {
+    setDragOverIndex(null);
+    setDraggingIndex(null);
+    dragIndexRef.current = null;
+  }, []);
 
   const [hasUserEdited, setHasUserEdited] = useState(false);
   const isDirty = hasUserEdited && content !== originalContent;
@@ -258,13 +314,34 @@ export default function DocsPage() {
                   Pinned
                 </span>
               </div>
-              {pinnedPaths.map((filePath) => {
+              {pinnedPaths.map((filePath, index) => {
                 const fileName = filePath.split('/').pop() || filePath;
+                const isDragging = draggingIndex === index;
+                const isOver = dragOverIndex === index;
                 return (
-                  <div key={filePath} className="group flex items-center">
+                  <div
+                    key={filePath}
+                    draggable
+                    onDragStart={(e) => handlePinDragStart(e, index)}
+                    onDragOver={(e) => handlePinDragOver(e, index)}
+                    onDrop={(e) => handlePinDrop(e, index)}
+                    onDragEnd={handlePinDragEnd}
+                    className={`group flex items-center relative transition-opacity ${
+                      isDragging ? 'opacity-40' : ''
+                    }`}
+                    style={{ cursor: 'grab' }}
+                  >
+                    {isOver && dragIndexRef.current !== index && (
+                      <div className="absolute left-2 right-2 top-0 h-[2px] bg-primary rounded-full z-10" />
+                    )}
+                    <span
+                      className="flex-shrink-0 pl-1.5 opacity-0 group-hover:opacity-60 text-muted-foreground cursor-grab active:cursor-grabbing"
+                    >
+                      <DragGrip />
+                    </span>
                     <button
                       onClick={() => handleSelect(filePath)}
-                      className={`flex-1 text-left flex items-center gap-1.5 py-1 px-3 text-[13px] transition-colors truncate ${
+                      className={`flex-1 text-left flex items-center gap-1.5 py-1 px-1.5 text-[13px] transition-colors truncate ${
                         activePath === filePath
                           ? 'bg-sidebar-accent text-sidebar-primary font-medium'
                           : 'text-sidebar-foreground hover:bg-sidebar-accent'
