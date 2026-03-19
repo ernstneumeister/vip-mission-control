@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { RefreshCw, Target, Users } from '../components/Icons';
+import { RefreshCw, Target, Users, Clock, TrendingUp, CheckSquare, Square, Megaphone, Mail, Camera, Zap, Radio } from '../components/Icons';
 
 interface WebinarStats {
   total: number;
@@ -261,7 +261,7 @@ export default function WebinarPage() {
         <div className="bg-card border border-border rounded-xl p-5 shadow-sm">
           <div className="flex items-center justify-between mb-3">
             <span className="text-sm font-medium text-muted-foreground">Tage übrig</span>
-            <span className="text-lg">⏳</span>
+            <Clock size={16} className="text-muted-foreground" />
           </div>
           <div className="text-3xl font-bold text-foreground">{stats.daysLeft}</div>
           <div className="text-sm text-muted-foreground mt-1">bis 2. April</div>
@@ -287,7 +287,7 @@ export default function WebinarPage() {
         <div className="bg-card border border-border rounded-xl p-5 shadow-sm">
           <div className="flex items-center justify-between mb-3">
             <span className="text-sm font-medium text-muted-foreground">Prognose</span>
-            <span className="text-lg">📈</span>
+            <TrendingUp size={16} className="text-primary" />
           </div>
           <div className={`text-3xl font-bold ${stats.projectedTotal >= stats.goal ? 'text-green-600' : 'text-yellow-600'}`}>
             {stats.projectedTotal}
@@ -315,9 +315,11 @@ export default function WebinarPage() {
           <div className="space-y-3">
             {stats.milestones.map((m, i) => (
               <div key={i} className="flex items-center gap-3">
-                <span className={`text-lg ${m.reached ? '' : 'grayscale opacity-40'}`}>
-                  {m.reached ? '✅' : '⬜'}
-                </span>
+                {m.reached ? (
+                  <CheckSquare size={18} className="text-green-600" />
+                ) : (
+                  <Square size={18} className="text-muted-foreground/30" />
+                )}
                 <div className="flex-1">
                   <div className={`text-sm ${m.reached ? 'text-foreground font-medium' : 'text-muted-foreground'}`}>
                     {m.label}
@@ -377,22 +379,33 @@ export default function WebinarPage() {
           <h3 className="text-sm font-semibold text-foreground mb-4">Nächste Schritte</h3>
           <div className="space-y-3">
             {[
-              { date: '21. März', label: 'Ads live schalten', emoji: '📣', done: false },
-              { date: '24. März', label: 'Email 1 + LinkedIn + Skool', emoji: '📧', done: false },
-              { date: '25. März', label: 'Instagram Karussell', emoji: '📸', done: false },
-              { date: '27. März', label: 'Email 2 + LinkedIn', emoji: '📧', done: false },
-              { date: '31. März', label: 'Email 3 (Social Proof)', emoji: '🔥', done: false },
-              { date: '1. April', label: 'Email 4 (Reminder)', emoji: '⏰', done: false },
-              { date: '2. April', label: 'WEBINAR LIVE 🔴', emoji: '🎯', done: false },
-            ].map((item, i) => (
-              <div key={i} className="flex items-center gap-3">
-                <span className="text-sm w-[60px] text-muted-foreground font-mono">{item.date}</span>
-                <span>{item.emoji}</span>
-                <span className={`text-sm flex-1 ${item.done ? 'line-through text-muted-foreground' : 'text-foreground'}`}>
-                  {item.label}
-                </span>
-              </div>
-            ))}
+              { date: '21. März', label: 'Ads live schalten', icon: 'megaphone', done: false },
+              { date: '24. März', label: 'Email 1 + LinkedIn + Skool', icon: 'mail', done: false },
+              { date: '25. März', label: 'Instagram Karussell', icon: 'camera', done: false },
+              { date: '27. März', label: 'Email 2 + LinkedIn', icon: 'mail', done: false },
+              { date: '31. März', label: 'Email 3 (Social Proof)', icon: 'zap', done: false },
+              { date: '1. April', label: 'Email 4 (Reminder)', icon: 'clock', done: false },
+              { date: '2. April', label: 'WEBINAR LIVE', icon: 'target', done: false },
+            ].map((item, i) => {
+              const iconMap: Record<string, JSX.Element> = {
+                megaphone: <Megaphone size={16} className="text-muted-foreground" />,
+                mail: <Mail size={16} className="text-muted-foreground" />,
+                camera: <Camera size={16} className="text-muted-foreground" />,
+                zap: <Zap size={16} className="text-orange-500" />,
+                clock: <Clock size={16} className="text-muted-foreground" />,
+                target: <Target size={16} className="text-primary" />,
+              };
+              return (
+                <div key={i} className="flex items-center gap-3">
+                  <span className="text-sm w-[60px] text-muted-foreground font-mono">{item.date}</span>
+                  {iconMap[item.icon]}
+                  <span className={`text-sm flex-1 ${item.done ? 'line-through text-muted-foreground' : 'text-foreground'}`}>
+                    {item.label}
+                    {item.icon === 'target' && <Radio size={14} className="text-red-500 inline ml-1.5" />}
+                  </span>
+                </div>
+              );
+            })}
           </div>
         </div>
       </div>
