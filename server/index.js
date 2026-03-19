@@ -578,8 +578,12 @@ app.get('/api/webinar/stats', async (req, res) => {
       { label: '200 Anmeldungen 🎯', target: 200, reached: data.total >= 200 },
     ];
 
-    // Webinar #1 comparison
-    const webinar1 = { total: 107, label: 'Webinar #1 (5. März)' };
+    // Past webinars comparison
+    const pastWebinars = [
+      { label: 'Webinar #1 (8. Feb)', total: 46 },
+      { label: 'Webinar #2 (5. Mär)', total: 103 },
+    ];
+    const webinar1 = { total: 46, label: 'Webinar #1 (8. Feb)' }; // backward compat
 
     res.json({
       total: data.total,
@@ -592,6 +596,7 @@ app.get('/api/webinar/stats', async (req, res) => {
       dailyData,
       milestones,
       webinar1,
+      pastWebinars,
       webinarDate: '2026-04-02T10:00:00+02:00',
       lastUpdated: new Date().toISOString(),
     });

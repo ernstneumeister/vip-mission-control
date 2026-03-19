@@ -12,6 +12,7 @@ interface WebinarStats {
   dailyData: { date: string; count: number }[];
   milestones: { label: string; target: number; reached: boolean }[];
   webinar1: { total: number; label: string };
+  pastWebinars: { label: string; total: number }[];
   webinarDate: string;
   lastUpdated: string;
 }
@@ -27,12 +28,17 @@ function formatDateTime(iso: string) {
 }
 
 function MiniBar({ data, maxVal }: { data: { date: string; count: number }[]; maxVal: number }) {
-  if (!data.length) return <div className="text-muted-foreground text-sm">Noch keine Daten</div>;
+  if (!data.length) return <div className="text-muted-foreground text-sm py-8 text-center">Noch keine Anmeldungen</div>;
   const barMax = Math.max(maxVal, ...data.map(d => d.count));
+  const fewBars = data.length < 7;
   return (
-    <div className="flex items-end gap-1 h-[120px]">
+    <div className={`flex items-end gap-1 h-[160px] ${fewBars ? 'justify-center' : ''}`}>
       {data.map((d, i) => (
-        <div key={i} className="flex flex-col items-center gap-1 flex-1 min-w-0">
+        <div
+          key={i}
+          className={`flex flex-col items-center gap-1 ${fewBars ? '' : 'flex-1'} min-w-0`}
+          style={fewBars ? { minWidth: '40px', maxWidth: '60px', flex: '1 1 auto' } : undefined}
+        >
           <span className="text-[10px] text-muted-foreground font-medium">{d.count}</span>
           <div
             className="w-full rounded-t bg-primary/80 transition-all duration-300 min-h-[2px]"
@@ -218,32 +224,34 @@ export default function WebinarPage() {
 
       {/* Comparison + Timeline */}
       <div className="grid grid-cols-2 gap-4">
-        {/* Webinar #1 Comparison */}
+        {/* Webinar Comparison */}
         <div className="bg-card border border-border rounded-xl p-5 shadow-sm">
-          <h3 className="text-sm font-semibold text-foreground mb-4">Vergleich: Webinar #1</h3>
+          <h3 className="text-sm font-semibold text-foreground mb-4">Webinar-Vergleich</h3>
           <div className="space-y-4">
+            {(stats.pastWebinars || []).map((w, i) => (
+              <div key={i}>
+                <div className="flex justify-between text-sm mb-1">
+                  <span className="text-muted-foreground">{w.label}</span>
+                  <span className="font-semibold text-foreground">{w.total}</span>
+                </div>
+                <div className="h-3 bg-muted rounded-full overflow-hidden">
+                  <div className="h-full bg-blue-400 rounded-full" style={{ width: `${(w.total / stats.goal) * 100}%` }} />
+                </div>
+              </div>
+            ))}
             <div>
               <div className="flex justify-between text-sm mb-1">
-                <span className="text-muted-foreground">Webinar #1 (5. März)</span>
-                <span className="font-semibold text-foreground">{stats.webinar1.total}</span>
-              </div>
-              <div className="h-3 bg-muted rounded-full overflow-hidden">
-                <div className="h-full bg-blue-400 rounded-full" style={{ width: `${(stats.webinar1.total / stats.goal) * 100}%` }} />
-              </div>
-            </div>
-            <div>
-              <div className="flex justify-between text-sm mb-1">
-                <span className="text-muted-foreground">Webinar #3 (aktuell)</span>
+                <span className="text-muted-foreground">Webinar #3 (2. Apr)</span>
                 <span className="font-semibold text-foreground">{stats.total}</span>
               </div>
               <div className="h-3 bg-muted rounded-full overflow-hidden">
-                <div className="h-full bg-primary rounded-full transition-all duration-500" style={{ width: `${stats.progressPct}%` }} />
+                <div className="h-full bg-primary rounded-full transition-all duration-500" style={{ width: `${(stats.total / stats.goal) * 100}%` }} />
               </div>
             </div>
             <div>
               <div className="flex justify-between text-sm mb-1">
                 <span className="text-muted-foreground">Ziel Webinar #3</span>
-                <span className="font-semibold text-foreground">{stats.goal}</span>
+                <span className="font-semibold text-foreground">200</span>
               </div>
               <div className="h-3 bg-muted rounded-full overflow-hidden">
                 <div className="h-full bg-green-400 rounded-full" style={{ width: '100%' }} />
