@@ -3,13 +3,14 @@ import { BubbleMenu } from '@tiptap/react/menus';
 import StarterKit from '@tiptap/starter-kit';
 import Placeholder from '@tiptap/extension-placeholder';
 import Typography from '@tiptap/extension-typography';
-import Table from '@tiptap/extension-table';
-import TableRow from '@tiptap/extension-table-row';
-import TableHeader from '@tiptap/extension-table-header';
-import TableCell from '@tiptap/extension-table-cell';
+import { Table } from '@tiptap/extension-table';
+import { TableRow } from '@tiptap/extension-table';
+import { TableHeader } from '@tiptap/extension-table';
+import { TableCell } from '@tiptap/extension-table';
 import { Markdown } from 'tiptap-markdown';
+import markdownit from 'markdown-it';
 import GlobalDragHandle from 'tiptap-extension-global-drag-handle';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useMemo } from 'react';
 import { SlashCommand } from '../extensions/slash-command';
 import { getSlashCommandSuggestion } from './SlashCommandList';
 
@@ -19,8 +20,18 @@ interface Props {
   editable?: boolean;
 }
 
+// Convert markdown to HTML using markdown-it (handles GFM tables correctly)
+const md = markdownit({ html: true, linkify: true, typographer: true });
+
+function markdownToHtml(markdown: string): string {
+  return md.render(markdown);
+}
+
 export default function TipTapEditor({ content, onChange, editable = true }: Props) {
   const isSettling = useRef(true);
+  
+  // Convert markdown to HTML for initial content
+  const htmlContent = useMemo(() => markdownToHtml(content), [content]);
   
   const editor = useEditor({
     extensions: [
@@ -34,7 +45,7 @@ export default function TipTapEditor({ content, onChange, editable = true }: Pro
       }),
       Typography,
       Markdown.configure({
-        html: false,
+        html: true,
         transformCopiedText: true,
         transformPastedText: true,
       }),
@@ -49,8 +60,11 @@ export default function TipTapEditor({ content, onChange, editable = true }: Pro
         dragHandleWidth: 20,
       }),
     ],
-    content,
+    content: htmlContent,
     editable,
+    parseOptions: {
+      preserveWhitespace: false,
+    },
     onUpdate: ({ editor }) => {
       if (isSettling.current) return; // Skip initial parse
       const md = editor.storage.markdown.getMarkdown();
@@ -76,7 +90,9 @@ export default function TipTapEditor({ content, onChange, editable = true }: Pro
   useEffect(() => {
     if (editor && content !== editor.storage.markdown.getMarkdown()) {
       isSettling.current = true;
-      editor.commands.setContent(content);
+      // tiptap-markdown overrides setContent to parse as markdown.
+      // We pass HTML (from markdown-it) which handles tables correctly.
+      editor.commands.setContent(markdownToHtml(content));
       setTimeout(() => { isSettling.current = false; }, 300);
     }
   }, [content, editor]);

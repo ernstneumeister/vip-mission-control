@@ -1,12 +1,13 @@
 import { useState } from 'react';
 import { useLocation, Link } from 'react-router-dom';
-import { LayoutDashboard, Bot, Radio, CheckSquare, FileText, Zap, BarChart, Settings, ChevronLeft, ChevronRight } from './Icons';
+import { LayoutDashboard, Bot, Radio, CheckSquare, FileText, Zap, BarChart, Settings, ChevronLeft, ChevronRight, Presentation } from './Icons';
 
 const navItems = [
   { icon: LayoutDashboard, label: 'Dashboard', path: '/dashboard', disabled: true },
   { icon: Bot, label: 'Agents', path: '/agents', disabled: true },
   { icon: Radio, label: 'Activity', path: '/activity', disabled: true },
   { icon: CheckSquare, label: 'Tasks', path: '/tasks', disabled: false },
+  { icon: Presentation, label: 'Webinar', path: '/webinar', disabled: false },
   { icon: FileText, label: 'Docs', path: '/docs', disabled: false },
   { icon: Zap, label: 'Skills', path: '/skills', disabled: true },
   { icon: BarChart, label: 'Usage', path: '/usage', disabled: true },

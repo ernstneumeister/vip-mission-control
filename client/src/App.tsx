@@ -6,6 +6,7 @@ import TasksPage from './pages/TasksPage';
 import TaskDetail from './pages/TaskDetail';
 import CronDetailPage from './pages/CronDetailPage';
 import DocsPage from './pages/DocsPage';
+import WebinarPage from './pages/WebinarPage';
 import type { Agent } from './types';
 import { getAgents } from './api';
 
@@ -29,6 +30,7 @@ export default function App() {
             <Route path="/tasks/:id" element={<TaskDetail agents={agents} />} />
             <Route path="/cron/:id" element={<CronDetailPage />} />
             <Route path="/docs" element={<DocsPage />} />
+            <Route path="/webinar" element={<WebinarPage />} />
           </Routes>
         </main>
       </div>

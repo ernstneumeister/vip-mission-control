@@ -16,7 +16,7 @@ app.use(express.json());
 
 // Serve static client build
 const clientDist = path.join(__dirname, '..', 'client', 'dist');
-app.use(express.static(clientDist));
+app.use(express.static(clientDist, { maxAge: 0, etag: false }));
 
 // Ensure avatars dir in dist and copy from public
 const avatarsDistDir = path.join(clientDist, 'avatars');
@@ -484,6 +484,119 @@ app.put('/api/docs/file', (req, res) => {
     res.json({ path: filePath, modified: stat.mtime, size: stat.size, saved: true });
   } catch(e) {
     res.status(500).json({ error: 'Failed to save: ' + e.message });
+  }
+});
+
+// ─── Webinar KPIs ───
+const KIT_API_KEY = process.env.KIT_API_KEY;
+const WEBINAR_TAG_ID = '17399376'; // Webinar #3 (02.04.2026)
+const WEBINAR_DATE = new Date('2026-04-02T08:00:00Z'); // 10:00 CEST
+const WEBINAR_GOAL = 200;
+
+let webinarCache = { data: null, expiresAt: 0 };
+
+async function fetchKitSubscribers() {
+  const now = Date.now();
+  if (webinarCache.data && now < webinarCache.expiresAt) {
+    return webinarCache.data;
+  }
+
+  if (!KIT_API_KEY) {
+    return { error: 'KIT_API_KEY not set', subscribers: [], total: 0 };
+  }
+
+  const allSubscribers = [];
+  let cursor = null;
+  let hasMore = true;
+
+  while (hasMore) {
+    const url = cursor
+      ? `https://api.kit.com/v4/tags/${WEBINAR_TAG_ID}/subscribers?per_page=500&after=${cursor}`
+      : `https://api.kit.com/v4/tags/${WEBINAR_TAG_ID}/subscribers?per_page=500`;
+
+    const resp = await fetch(url, {
+      headers: { 'X-Kit-Api-Key': KIT_API_KEY, 'Accept': 'application/json' },
+    });
+    if (!resp.ok) {
+      return { error: `Kit API error: ${resp.status}`, subscribers: [], total: 0 };
+    }
+    const data = await resp.json();
+    allSubscribers.push(...(data.subscribers || []));
+    hasMore = data.pagination?.has_next_page || false;
+    cursor = data.pagination?.end_cursor || null;
+  }
+
+  const result = { subscribers: allSubscribers, total: allSubscribers.length };
+  webinarCache = { data: result, expiresAt: now + 120000 }; // 2min cache
+  return result;
+}
+
+app.get('/api/webinar/stats', async (req, res) => {
+  try {
+    if (req.query.fresh === '1') {
+      webinarCache = { data: null, expiresAt: 0 };
+    }
+    const data = await fetchKitSubscribers();
+    if (data.error) {
+      return res.status(500).json({ error: data.error });
+    }
+
+    const now = new Date();
+    const msLeft = WEBINAR_DATE.getTime() - now.getTime();
+    const daysLeft = Math.max(0, Math.ceil(msLeft / (1000 * 60 * 60 * 24)));
+    const remaining = Math.max(0, WEBINAR_GOAL - data.total);
+    const dailyPaceNeeded = daysLeft > 0 ? Math.ceil(remaining / daysLeft) : remaining;
+    const progressPct = Math.min(100, Math.round((data.total / WEBINAR_GOAL) * 100));
+
+    // Group registrations by day
+    const byDay = {};
+    for (const sub of data.subscribers) {
+      const day = (sub.tagged_at || sub.created_at || '').slice(0, 10);
+      if (day) {
+        byDay[day] = (byDay[day] || 0) + 1;
+      }
+    }
+    // Sort days
+    const dailyData = Object.entries(byDay)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([date, count]) => ({ date, count }));
+
+    // Calculate trend (avg per day over last 7 days with registrations)
+    const recentDays = dailyData.slice(-7);
+    const avgPerDay = recentDays.length > 0
+      ? recentDays.reduce((s, d) => s + d.count, 0) / recentDays.length
+      : 0;
+    const projectedTotal = daysLeft > 0
+      ? Math.round(data.total + avgPerDay * daysLeft)
+      : data.total;
+
+    // Milestones
+    const milestones = [
+      { label: '50 Anmeldungen', target: 50, reached: data.total >= 50 },
+      { label: '100 Anmeldungen', target: 100, reached: data.total >= 100 },
+      { label: '150 Anmeldungen', target: 150, reached: data.total >= 150 },
+      { label: '200 Anmeldungen 🎯', target: 200, reached: data.total >= 200 },
+    ];
+
+    // Webinar #1 comparison
+    const webinar1 = { total: 107, label: 'Webinar #1 (5. März)' };
+
+    res.json({
+      total: data.total,
+      goal: WEBINAR_GOAL,
+      daysLeft,
+      dailyPaceNeeded,
+      progressPct,
+      projectedTotal,
+      avgPerDay: Math.round(avgPerDay * 10) / 10,
+      dailyData,
+      milestones,
+      webinar1,
+      webinarDate: '2026-04-02T10:00:00+02:00',
+      lastUpdated: new Date().toISOString(),
+    });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
   }
 });
 

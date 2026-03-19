@@ -74,6 +74,12 @@ export const saveDocFile = (filePath: string, content: string) =>
     body: JSON.stringify({ path: filePath, content }),
   });
 
+// Webinar
+export const getWebinarStats = (fresh = false) => {
+  const qs = fresh ? '?fresh=1' : '';
+  return fetchJSON<any>(`/webinar/stats${qs}`);
+};
+
 // Avatar upload
 export const uploadAgentAvatar = async (agentId: string, file: File): Promise<Agent> => {
   const formData = new FormData();
