@@ -80,6 +80,12 @@ export const getWebinarStats = (fresh = false) => {
   return fetchJSON<any>(`/webinar/stats${qs}`);
 };
 
+// Environment Variables
+export const getEnvVars = () => fetchJSON<{ vars: Record<string, string>; count: number }>('/env');
+export const getEnvVarValue = (key: string) => fetchJSON<{ key: string; value: string }>(`/env/${encodeURIComponent(key)}`);
+export const setEnvVar = (key: string, value: string) => fetchJSON<{ success: boolean; key: string }>(`/env/${encodeURIComponent(key)}`, { method: 'PUT', body: JSON.stringify({ value }) });
+export const deleteEnvVar = (key: string) => fetchJSON<{ success: boolean }>(`/env/${encodeURIComponent(key)}`, { method: 'DELETE' });
+
 // Avatar upload
 export const uploadAgentAvatar = async (agentId: string, file: File): Promise<Agent> => {
   const formData = new FormData();

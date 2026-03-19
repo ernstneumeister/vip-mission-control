@@ -31,6 +31,7 @@ export default function App() {
             <Route path="/cron/:id" element={<CronDetailPage />} />
             <Route path="/docs" element={<DocsPage />} />
             <Route path="/webinar" element={<WebinarPage />} />
+            <Route path="/env" element={<EnvPage />} />
           </Routes>
         </main>
       </div>

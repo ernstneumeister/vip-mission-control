@@ -420,6 +420,58 @@ app.get('/api/activity/:taskId', (req, res) => {
   res.json(logs);
 });
 
+// ─── Environment Variables ───
+app.get('/api/env', (req, res) => {
+  try {
+    const configPath = path.join(process.env.HOME || '/root', '.openclaw', 'openclaw.json');
+    const config = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
+    const vars = config?.env?.vars || {};
+    // Return keys with masked values
+    const masked = {};
+    for (const [key, value] of Object.entries(vars)) {
+      const v = String(value);
+      masked[key] = v.length > 8 ? v.slice(0, 4) + '•'.repeat(Math.min(v.length - 8, 20)) + v.slice(-4) : '••••••••';
+    }
+    res.json({ vars: masked, count: Object.keys(vars).length });
+  } catch(e) {
+    res.status(500).json({ error: 'Failed to read config: ' + e.message });
+  }
+});
+
+app.get('/api/env/:key', (req, res) => {
+  try {
+    const configPath = path.join(process.env.HOME || '/root', '.openclaw', 'openclaw.json');
+    const config = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
+    const value = config?.env?.vars?.[req.params.key];
+    if (value === undefined) return res.status(404).json({ error: 'Key not found' });
+    res.json({ key: req.params.key, value: String(value) });
+  } catch(e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.put('/api/env/:key', (req, res) => {
+  try {
+    const { value } = req.body;
+    if (value === undefined || value === null) return res.status(400).json({ error: 'value required' });
+    const key = req.params.key;
+    // Use openclaw config set for safe writing
+    execSync(`openclaw config set "env.vars.${key}" "${String(value).replace(/"/g, '\\"')}"`, { encoding: 'utf-8', timeout: 10000 });
+    res.json({ success: true, key });
+  } catch(e) {
+    res.status(500).json({ error: 'Failed to save: ' + e.message });
+  }
+});
+
+app.delete('/api/env/:key', (req, res) => {
+  try {
+    execSync(`openclaw config unset "env.vars.${req.params.key}"`, { encoding: 'utf-8', timeout: 10000 });
+    res.json({ success: true });
+  } catch(e) {
+    res.status(500).json({ error: 'Failed to delete: ' + e.message });
+  }
+});
+
 // ─── Docs / Editor ───
 const DOCS_ROOT = '/root/clawd';
 

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useLocation, Link } from 'react-router-dom';
-import { LayoutDashboard, Bot, Radio, CheckSquare, FileText, Zap, BarChart, Settings, ChevronLeft, ChevronRight, Presentation } from './Icons';
+import { LayoutDashboard, Bot, Radio, CheckSquare, FileText, Zap, BarChart, Settings, ChevronLeft, ChevronRight, Presentation, Key } from './Icons';
 
 const navItems = [
   { icon: LayoutDashboard, label: 'Dashboard', path: '/dashboard', disabled: true },
@@ -9,6 +9,7 @@ const navItems = [
   { icon: CheckSquare, label: 'Tasks', path: '/tasks', disabled: false },
   { icon: Presentation, label: 'Webinar', path: '/webinar', disabled: false },
   { icon: FileText, label: 'Docs', path: '/docs', disabled: false },
+  { icon: Key, label: 'Env Vars', path: '/env', disabled: false },
   { icon: Zap, label: 'Skills', path: '/skills', disabled: true },
   { icon: BarChart, label: 'Usage', path: '/usage', disabled: true },
 ];
