@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { RefreshCw, Target, Users, Clock, TrendingUp, CheckSquare, Square, Megaphone, Mail, Camera, Zap, Radio } from '../components/Icons';
+import { RefreshCw, Target, Users, Clock, TrendingUp, CheckSquare, Square, Megaphone, Mail, Camera, Zap, Radio, Presentation } from '../components/Icons';
 
 interface WebinarStats {
   total: number;
@@ -221,7 +221,7 @@ export default function WebinarPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
-            🎯 Webinar #3 Dashboard
+            <Presentation size={24} className="text-muted-foreground" /> Webinar #3 Dashboard
           </h1>
           <p className="text-sm text-muted-foreground mt-1">
             Live-Training am 2. April 2026, 10:00 Uhr · {stats.daysLeft} Tage verbleibend
@@ -243,7 +243,7 @@ export default function WebinarPage() {
         <div className="bg-card border border-border rounded-xl p-5 shadow-sm">
           <div className="flex items-center justify-between mb-3">
             <span className="text-sm font-medium text-muted-foreground">Anmeldungen</span>
-            <Users size={16} className="text-primary" />
+            <Users size={16} className="text-muted-foreground" />
           </div>
           <div className="text-3xl font-bold text-foreground">{stats.total}</div>
           <div className="text-sm text-muted-foreground mt-1">Ziel: {stats.goal}</div>
@@ -274,7 +274,7 @@ export default function WebinarPage() {
         <div className="bg-card border border-border rounded-xl p-5 shadow-sm">
           <div className="flex items-center justify-between mb-3">
             <span className="text-sm font-medium text-muted-foreground">Pace / Tag</span>
-            <Target size={16} className={paceColor} />
+            <Target size={16} className="text-muted-foreground" />
           </div>
           <div className={`text-3xl font-bold ${paceColor}`}>{stats.avgPerDay}</div>
           <div className="text-sm text-muted-foreground mt-1">Ø pro Tag (letzte 7d)</div>
@@ -287,7 +287,7 @@ export default function WebinarPage() {
         <div className="bg-card border border-border rounded-xl p-5 shadow-sm">
           <div className="flex items-center justify-between mb-3">
             <span className="text-sm font-medium text-muted-foreground">Prognose</span>
-            <TrendingUp size={16} className="text-primary" />
+            <TrendingUp size={16} className="text-muted-foreground" />
           </div>
           <div className={`text-3xl font-bold ${stats.projectedTotal >= stats.goal ? 'text-green-600' : 'text-yellow-600'}`}>
             {stats.projectedTotal}

@@ -575,7 +575,7 @@ app.get('/api/webinar/stats', async (req, res) => {
       { label: '50 Anmeldungen', target: 50, reached: data.total >= 50 },
       { label: '100 Anmeldungen', target: 100, reached: data.total >= 100 },
       { label: '150 Anmeldungen', target: 150, reached: data.total >= 150 },
-      { label: '200 Anmeldungen 🎯', target: 200, reached: data.total >= 200 },
+      { label: '200 Anmeldungen', target: 200, reached: data.total >= 200 },
     ];
 
     // Past webinars comparison
