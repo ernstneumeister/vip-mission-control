@@ -46,4 +46,4 @@ The dashboard auto-detects your OpenClaw workspace at `~/.openclaw/workspace` (o
 
 ## License
 
-MIT
+© Neumeister Consulting GmbH. Nutzung ausschließlich für unsere Kunden. Weitergabe, Verkauf und kommerzielle Weiterverwendung nicht gestattet.
