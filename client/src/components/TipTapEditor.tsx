@@ -7,6 +7,9 @@ import { Table } from '@tiptap/extension-table';
 import { TableRow } from '@tiptap/extension-table';
 import { TableHeader } from '@tiptap/extension-table';
 import { TableCell } from '@tiptap/extension-table';
+import Highlight from '@tiptap/extension-highlight';
+import TaskList from '@tiptap/extension-task-list';
+import TaskItem from '@tiptap/extension-task-item';
 import { Markdown } from 'tiptap-markdown';
 import markdownit from 'markdown-it';
 import GlobalDragHandle from 'tiptap-extension-global-drag-handle';
@@ -21,7 +24,8 @@ interface Props {
 }
 
 // Convert markdown to HTML using markdown-it (handles GFM tables correctly)
-const md = markdownit({ html: true, linkify: true, typographer: true });
+import taskLists from 'markdown-it-task-lists';
+const md = markdownit({ html: true, linkify: true, typographer: true }).use(taskLists);
 
 function markdownToHtml(markdown: string): string {
   return md.render(markdown);
@@ -44,6 +48,9 @@ export default function TipTapEditor({ content, onChange, editable = true }: Pro
         placeholder: 'Type "/" for commands...',
       }),
       Typography,
+      Highlight.configure({ multicolor: false }),
+      TaskList,
+      TaskItem.configure({ nested: true }),
       Markdown.configure({
         html: true,
         transformCopiedText: true,
@@ -123,6 +130,9 @@ export default function TipTapEditor({ content, onChange, editable = true }: Pro
         </BubbleButton>
         <BubbleButton onClick={() => editor.chain().focus().toggleCode().run()} active={editor.isActive('code')} title="Code">
           {'</>'}
+        </BubbleButton>
+        <BubbleButton onClick={() => editor.chain().focus().toggleHighlight().run()} active={editor.isActive('highlight')} title="Highlight">
+          <span style={{ backgroundColor: '#f9eabd', padding: '0 4px', borderRadius: '2px', fontWeight: 600, fontSize: '12px' }}>H</span>
         </BubbleButton>
         <BubbleDivider />
         <BubbleButton onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()} active={editor.isActive('heading', { level: 1 })} title="H1">
