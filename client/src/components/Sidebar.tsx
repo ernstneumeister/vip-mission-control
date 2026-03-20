@@ -114,24 +114,23 @@ export default function Sidebar() {
             </div>
             <div className="flex items-center gap-3 px-3 py-1.5 mt-1 rounded-md text-[13px] font-medium text-muted-foreground cursor-not-allowed">
               <span className="opacity-40"><Settings size={16} /></span>
-              <span>Settings</span>
+              <span className="flex-1">Settings</span>
+              {version && (
+                <a
+                  href="https://www.skool.com/experten-mastermind/classroom/ca0a1a51?md=73f0f413a1de4f708801e04575b2d6fd"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={`text-[13px] no-underline transition-colors ${
+                    updateAvailable
+                      ? 'text-primary font-medium'
+                      : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                  title={updateAvailable ? 'Update verfügbar! Klicke für die Anleitung.' : 'Mission Control Version'}
+                >
+                  {updateAvailable ? '🔄 ' : 'v'}{version}
+                </a>
+              )}
             </div>
-            {version && (
-              <a
-                href="https://www.skool.com/experten-mastermind/classroom/ca0a1a51?md=73f0f413a1de4f708801e04575b2d6fd"
-                target="_blank"
-                rel="noopener noreferrer"
-                className={`flex items-center gap-1.5 px-3 py-1 mt-1 rounded text-[11px] no-underline transition-colors ${
-                  updateAvailable
-                    ? 'text-primary hover:bg-primary/10 font-medium'
-                    : 'text-muted-foreground/60 hover:text-muted-foreground'
-                }`}
-                title={updateAvailable ? 'Update verfügbar! Klicke für die Anleitung.' : 'Mission Control Version'}
-              >
-                <span>{updateAvailable ? '🔄' : 'v'}{version}</span>
-                {updateAvailable && <span className="text-[10px]">Update verfügbar</span>}
-              </a>
-            )}
           </>
         )}
       </div>
