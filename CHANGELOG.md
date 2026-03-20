@@ -36,7 +36,7 @@ Letzte Änderungen am VIP Mission Control Dashboard.
 - d3e6cd9 Design overhaul: tweakcn theme, dark/light mode, cron detail page with edit + run history, remove fake task seeds
 - 2a55beb Real OpenClaw cron integration - pause/enable/delete controls real jobs
 - fe51bf4 Add Docs editor with file browser + markdown editing
-- be98292 UI: Ernst als Chief of Agents in Sidebar, deutsches Datum
+- be98292 UI: Admin als Chief of Agents in Sidebar, deutsches Datum
 - 4633f2b Add avatars, upload endpoint, fix hooks bug, add .gitignore
 - d3e9513 Add agent avatar images + upload, fix TaskDetail hooks bug
 - 83a98c5 Add design guide
