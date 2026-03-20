@@ -23,6 +23,31 @@ export default function Sidebar() {
   const [version, setVersion] = useState<string | null>(null);
   const [updateAvailable, setUpdateAvailable] = useState(false);
 
+  const [userSettings, setUserSettings] = useState(() => {
+    try {
+      const stored = localStorage.getItem('mc-user-settings');
+      return stored ? JSON.parse(stored) : { name: 'Admin', title: 'Chief of Agents', avatarUrl: '' };
+    } catch {
+      return { name: 'Admin', title: 'Chief of Agents', avatarUrl: '' };
+    }
+  });
+
+  // Listen for settings changes (from Settings page)
+  useEffect(() => {
+    const handler = () => {
+      try {
+        const stored = localStorage.getItem('mc-user-settings');
+        if (stored) setUserSettings(JSON.parse(stored));
+      } catch {}
+    };
+    window.addEventListener('storage', handler);
+    window.addEventListener('mc-settings-updated', handler);
+    return () => {
+      window.removeEventListener('storage', handler);
+      window.removeEventListener('mc-settings-updated', handler);
+    };
+  }, []);
+
   const toggleCollapsed = () => {
     const next = !collapsed;
     setCollapsed(next);
@@ -97,23 +122,31 @@ export default function Sidebar() {
         {collapsed ? (
           <>
             <div className="flex justify-center py-1.5">
-              <img src="/avatars/ernst.jpg" alt="Ernst" className="w-8 h-8 rounded-full object-cover" />
+              {userSettings.avatarUrl ? (
+                <img src={userSettings.avatarUrl} alt={userSettings.name} className="w-8 h-8 rounded-full object-cover" />
+              ) : (
+                <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center text-[16px]">🏄</div>
+              )}
             </div>
-            <div className="flex justify-center py-1.5 mt-1 text-muted-foreground opacity-40" title="Settings">
+            <Link to="/settings" className="flex justify-center py-1.5 mt-1 text-muted-foreground hover:text-foreground transition-colors no-underline" title="Settings">
               <Settings size={16} />
-            </div>
+            </Link>
           </>
         ) : (
           <>
             <div className="flex items-center gap-2 px-2 py-1.5">
-              <img src="/avatars/ernst.jpg" alt="Ernst" className="w-8 h-8 rounded-full object-cover" />
+              {userSettings.avatarUrl ? (
+                <img src={userSettings.avatarUrl} alt={userSettings.name} className="w-8 h-8 rounded-full object-cover" />
+              ) : (
+                <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center text-[16px]">🏄</div>
+              )}
               <div>
-                <div className="text-[13px] font-semibold text-foreground">Ernst</div>
-                <div className="text-[11px] text-muted-foreground">Chief of Agents</div>
+                <div className="text-[13px] font-semibold text-foreground">{userSettings.name}</div>
+                <div className="text-[11px] text-muted-foreground">{userSettings.title}</div>
               </div>
             </div>
-            <div className="flex items-center gap-3 px-3 py-1.5 mt-1 rounded-md text-[13px] font-medium text-muted-foreground cursor-not-allowed">
-              <span className="opacity-40"><Settings size={16} /></span>
+            <Link to="/settings" className="flex items-center gap-3 px-3 py-1.5 mt-1 rounded-md text-[13px] font-medium text-muted-foreground hover:text-foreground hover:bg-sidebar-accent no-underline transition-colors">
+              <span className="opacity-60"><Settings size={16} /></span>
               <span className="flex-1">Settings</span>
               {version && (
                 <a
@@ -126,11 +159,12 @@ export default function Sidebar() {
                       : 'text-muted-foreground hover:text-foreground'
                   }`}
                   title={updateAvailable ? 'Update verfügbar! Klicke für die Anleitung.' : 'Mission Control Version'}
+                  onClick={(e) => e.stopPropagation()}
                 >
                   {updateAvailable ? '🔄 ' : 'v'}{version}
                 </a>
               )}
-            </div>
+            </Link>
           </>
         )}
       </div>
