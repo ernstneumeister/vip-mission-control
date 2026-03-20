@@ -721,6 +721,44 @@ app.get('/api/webinar/stats', async (req, res) => {
   }
 });
 
+// ─── Version ───
+app.get('/api/version', (req, res) => {
+  try {
+    const versionFile = path.join(__dirname, '..', 'VERSION');
+    const version = fs.existsSync(versionFile) ? fs.readFileSync(versionFile, 'utf-8').trim() : 'unknown';
+
+    // Get latest remote version from GitHub
+    let latestVersion = null;
+    try {
+      const remote = execSync('git ls-remote --tags https://github.com/ernstneumeister/vip-mission-control.git 2>/dev/null | tail -1', { encoding: 'utf-8', timeout: 5000 }).trim();
+      // Fallback: read remote VERSION file
+      if (!remote) {
+        const remoteVersion = execSync('curl -sf https://raw.githubusercontent.com/ernstneumeister/vip-mission-control/main/VERSION 2>/dev/null', { encoding: 'utf-8', timeout: 5000 }).trim();
+        if (remoteVersion) latestVersion = remoteVersion;
+      }
+    } catch(e) {}
+
+    // Get local git info
+    let lastCommit = null;
+    let lastCommitDate = null;
+    try {
+      lastCommit = execSync('git log -1 --format="%h %s" 2>/dev/null', { encoding: 'utf-8', timeout: 3000, cwd: path.join(__dirname, '..') }).trim();
+      lastCommitDate = execSync('git log -1 --format="%ci" 2>/dev/null', { encoding: 'utf-8', timeout: 3000, cwd: path.join(__dirname, '..') }).trim();
+    } catch(e) {}
+
+    res.json({
+      version,
+      latestVersion,
+      updateAvailable: latestVersion && latestVersion !== version ? true : false,
+      lastCommit,
+      lastCommitDate,
+      repoUrl: 'https://github.com/ernstneumeister/vip-mission-control',
+    });
+  } catch(e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 // SPA fallback
 app.get('*', (req, res) => {
   res.sendFile(path.join(clientDist, 'index.html'));
