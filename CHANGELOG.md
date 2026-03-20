@@ -1,0 +1,43 @@
+# Changelog
+
+Letzte Änderungen am VIP Mission Control Dashboard.
+
+- 0f650ba Version API + CHANGELOG-Generierung im Sync-Script
+- 1af8b50 Fix: Add markdown-it-task-lists to HTML parser for checkbox rendering
+- edd086e Add TaskList/TaskItem extensions for checkbox support in Docs editor
+- fd8cecb Add Highlight button to BubbleMenu + brand-yellow CSS for mark tags
+- eaeb62d Security: Input Validation, CORS Restriction, Avatar Check, Path Traversal Fix
+- 51c81fd Docs: Deep-Links – Dateien direkt per URL öffnen (?file=path)
+- a1f05ae Fix: fehlender EnvPage Import in App.tsx
+- b2af2c2 Env Vars Editor: neue Seite zum Verwalten von API Keys und Tokens
+- bccafbd Docs: Drag & Drop Reordering für Pinned Files
+- 44380b6 Unify KPI icons: all muted-foreground, replace title emoji with Presentation SVG, remove milestone emoji
+- bd0be18 Replace Unicode emojis with SVG icons in Webinar Dashboard
+- bf57c22 Replace MiniBar with Kit-style BarChart: Y-axis, gridlines, hover, date filter
+- c6c2b5c Fix webinar dashboard: add all 3 webinars to comparison, improve bar chart
+- 8364059 Add Webinar KPI Dashboard
+- 3aa33e6 Add TipTap table extension + table in slash commands
+- fb3506e Fix false dirty state: suppress TipTap initial parse onUpdate events
+- 83cf740 Fix false dirty state in editor, improve file loading
+- 42b2eda Fix header line alignment: sidebar and header same height (50px)
+- a9ee51c Fix: back-to-recurring navigation, dark mode run history, pin feature, unsaved indicator
+- dbacc6e cleanup
+- ff1159b Header background matches page background
+- 74b3de2 Add slash commands + drag & drop to Notion-like editor
+- e740940 Fix docs page: only editor area white, rest uses background color
+- db50690 cleanup
+- 63a85ee Editor background uses card color (white/dark)
+- 68bf164 Remove date/time from header
+- 3a5d824 Clean up conflict artifacts
+- 446fb0d Notion-like editor, cron detail redesign, dark mode fixes, back-to-recurring fix
+- 290ff61 Speed: cron cache 30s, runs cache 60s, pre-warm on startup
+- e2393dc Replace MDEditor with TipTap Notion-like WYSIWYG editor
+- f76d91b Design polish: SVG icons, collapsible sidebar, card contrast, theme toggle, search consistency, dark mode fixes
+- d3e6cd9 Design overhaul: tweakcn theme, dark/light mode, cron detail page with edit + run history, remove fake task seeds
+- 2a55beb Real OpenClaw cron integration - pause/enable/delete controls real jobs
+- fe51bf4 Add Docs editor with file browser + markdown editing
+- be98292 UI: Ernst als Chief of Agents in Sidebar, deutsches Datum
+- 4633f2b Add avatars, upload endpoint, fix hooks bug, add .gitignore
+- d3e9513 Add agent avatar images + upload, fix TaskDetail hooks bug
+- 83a98c5 Add design guide
+- 92c2d29 Initial spec for Mission Control dashboard
