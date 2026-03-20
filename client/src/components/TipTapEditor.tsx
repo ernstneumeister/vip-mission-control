@@ -24,7 +24,8 @@ interface Props {
 }
 
 // Convert markdown to HTML using markdown-it (handles GFM tables correctly)
-const md = markdownit({ html: true, linkify: true, typographer: true });
+import taskLists from 'markdown-it-task-lists';
+const md = markdownit({ html: true, linkify: true, typographer: true }).use(taskLists);
 
 function markdownToHtml(markdown: string): string {
   return md.render(markdown);
