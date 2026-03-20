@@ -7,6 +7,7 @@ import { Table } from '@tiptap/extension-table';
 import { TableRow } from '@tiptap/extension-table';
 import { TableHeader } from '@tiptap/extension-table';
 import { TableCell } from '@tiptap/extension-table';
+import Highlight from '@tiptap/extension-highlight';
 import { Markdown } from 'tiptap-markdown';
 import markdownit from 'markdown-it';
 import GlobalDragHandle from 'tiptap-extension-global-drag-handle';
@@ -44,6 +45,7 @@ export default function TipTapEditor({ content, onChange, editable = true }: Pro
         placeholder: 'Type "/" for commands...',
       }),
       Typography,
+      Highlight.configure({ multicolor: false }),
       Markdown.configure({
         html: true,
         transformCopiedText: true,
@@ -123,6 +125,9 @@ export default function TipTapEditor({ content, onChange, editable = true }: Pro
         </BubbleButton>
         <BubbleButton onClick={() => editor.chain().focus().toggleCode().run()} active={editor.isActive('code')} title="Code">
           {'</>'}
+        </BubbleButton>
+        <BubbleButton onClick={() => editor.chain().focus().toggleHighlight().run()} active={editor.isActive('highlight')} title="Highlight">
+          <span style={{ backgroundColor: '#f9eabd', padding: '0 4px', borderRadius: '2px', fontWeight: 600, fontSize: '12px' }}>H</span>
         </BubbleButton>
         <BubbleDivider />
         <BubbleButton onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()} active={editor.isActive('heading', { level: 1 })} title="H1">
