@@ -2,6 +2,8 @@
 
 Letzte Änderungen am VIP Mission Control Dashboard.
 
+- 61f7c30 Settings-Seite: Name, Titel, Avatar anpassbar + 🏄 Fallback
+- 77faed2 UI: Version neben Settings statt darunter
 - be0a66e Sidebar: Versionsanzeige mit Link zur Update-Lektion
 - 0f650ba Version API + CHANGELOG-Generierung im Sync-Script
 - 1af8b50 Fix: Add markdown-it-task-lists to HTML parser for checkbox rendering

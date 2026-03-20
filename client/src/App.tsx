@@ -7,6 +7,7 @@ import TaskDetail from './pages/TaskDetail';
 import CronDetailPage from './pages/CronDetailPage';
 import DocsPage from './pages/DocsPage';
 import EnvPage from './pages/EnvPage';
+import SettingsPage from './pages/SettingsPage';
 import type { Agent } from './types';
 import { getAgents } from './api';
 
@@ -31,6 +32,7 @@ export default function App() {
             <Route path="/cron/:id" element={<CronDetailPage />} />
             <Route path="/docs" element={<DocsPage />} />
             <Route path="/env" element={<EnvPage />} />
+            <Route path="/settings" element={<SettingsPage />} />
           </Routes>
         </main>
       </div>
