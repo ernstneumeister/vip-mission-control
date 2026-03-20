@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useLocation, Link } from 'react-router-dom';
 
 const navItems = [
@@ -18,11 +18,24 @@ export default function Sidebar() {
     return localStorage.getItem('sidebar-collapsed') === 'true';
   });
 
+  const [version, setVersion] = useState<string | null>(null);
+  const [updateAvailable, setUpdateAvailable] = useState(false);
+
   const toggleCollapsed = () => {
     const next = !collapsed;
     setCollapsed(next);
     localStorage.setItem('sidebar-collapsed', String(next));
   };
+
+  useEffect(() => {
+    fetch('/api/version')
+      .then(r => r.json())
+      .then(d => {
+        setVersion(d.version || null);
+        setUpdateAvailable(d.updateAvailable || false);
+      })
+      .catch(() => {});
+  }, []);
 
   return (
     <aside className={`${collapsed ? 'w-[52px]' : 'w-[240px]'} h-screen bg-sidebar-bg border-r border-border/30 flex flex-col flex-shrink-0 transition-all duration-200`}>
@@ -101,6 +114,22 @@ export default function Sidebar() {
               <span className="opacity-40"><Settings size={16} /></span>
               <span>Settings</span>
             </div>
+            {version && (
+              <a
+                href="https://www.skool.com/experten-mastermind/classroom/ca0a1a51?md=73f0f413a1de4f708801e04575b2d6fd"
+                target="_blank"
+                rel="noopener noreferrer"
+                className={`flex items-center gap-1.5 px-3 py-1 mt-1 rounded text-[11px] no-underline transition-colors ${
+                  updateAvailable
+                    ? 'text-primary hover:bg-primary/10 font-medium'
+                    : 'text-muted-foreground/60 hover:text-muted-foreground'
+                }`}
+                title={updateAvailable ? 'Update verfügbar! Klicke für die Anleitung.' : 'Mission Control Version'}
+              >
+                <span>{updateAvailable ? '🔄' : 'v'}{version}</span>
+                {updateAvailable && <span className="text-[10px]">Update verfügbar</span>}
+              </a>
+            )}
           </>
         )}
       </div>

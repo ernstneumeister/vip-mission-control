@@ -2,6 +2,7 @@
 
 Letzte Änderungen am VIP Mission Control Dashboard.
 
+- be0a66e Sidebar: Versionsanzeige mit Link zur Update-Lektion
 - 0f650ba Version API + CHANGELOG-Generierung im Sync-Script
 - 1af8b50 Fix: Add markdown-it-task-lists to HTML parser for checkbox rendering
 - edd086e Add TaskList/TaskItem extensions for checkbox support in Docs editor
