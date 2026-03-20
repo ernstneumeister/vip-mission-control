@@ -8,6 +8,8 @@ import { TableRow } from '@tiptap/extension-table';
 import { TableHeader } from '@tiptap/extension-table';
 import { TableCell } from '@tiptap/extension-table';
 import Highlight from '@tiptap/extension-highlight';
+import TaskList from '@tiptap/extension-task-list';
+import TaskItem from '@tiptap/extension-task-item';
 import { Markdown } from 'tiptap-markdown';
 import markdownit from 'markdown-it';
 import GlobalDragHandle from 'tiptap-extension-global-drag-handle';
@@ -46,6 +48,8 @@ export default function TipTapEditor({ content, onChange, editable = true }: Pro
       }),
       Typography,
       Highlight.configure({ multicolor: false }),
+      TaskList,
+      TaskItem.configure({ nested: true }),
       Markdown.configure({
         html: true,
         transformCopiedText: true,
