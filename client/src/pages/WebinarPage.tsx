@@ -216,7 +216,7 @@ export default function WebinarPage() {
     stats.progressPct >= 40 ? 'bg-yellow-500' : 'bg-primary';
 
   return (
-    <div className="max-w-[1200px] mx-auto p-6 space-y-6">
+    <div className="max-w-[1200px] mx-auto p-3 md:p-6 space-y-4 md:space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -238,7 +238,7 @@ export default function WebinarPage() {
       </div>
 
       {/* KPI Cards Row */}
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
         {/* Registrations */}
         <div className="bg-card border border-border rounded-xl p-5 shadow-sm">
           <div className="flex items-center justify-between mb-3">
@@ -300,7 +300,7 @@ export default function WebinarPage() {
       </div>
 
       {/* Charts + Milestones Row */}
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4">
         {/* Daily Chart */}
         <div className="col-span-2 bg-card border border-border rounded-xl p-5 shadow-sm">
           <div className="flex items-center justify-between mb-4">
@@ -337,7 +337,7 @@ export default function WebinarPage() {
       </div>
 
       {/* Comparison + Timeline */}
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
         {/* Webinar Comparison */}
         <div className="bg-card border border-border rounded-xl p-5 shadow-sm">
           <h3 className="text-sm font-semibold text-foreground mb-4">Webinar-Vergleich</h3>
