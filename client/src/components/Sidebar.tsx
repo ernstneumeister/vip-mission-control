@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useLocation, Link } from 'react-router-dom';
 import { LayoutDashboard, Bot, Radio, CheckSquare, FileText, Zap, BarChart, Settings, ChevronLeft, ChevronRight, Presentation, Key } from './Icons';
 
@@ -19,6 +19,7 @@ export default function Sidebar() {
   const [collapsed, setCollapsed] = useState(() => {
     return localStorage.getItem('sidebar-collapsed') === 'true';
   });
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   const [version, setVersion] = useState<string | null>(null);
   const [updateAvailable, setUpdateAvailable] = useState(false);
@@ -48,6 +49,11 @@ export default function Sidebar() {
     };
   }, []);
 
+  // Close mobile sidebar on route change
+  useEffect(() => {
+    setMobileOpen(false);
+  }, [location.pathname]);
+
   const toggleCollapsed = () => {
     const next = !collapsed;
     setCollapsed(next);
@@ -64,8 +70,8 @@ export default function Sidebar() {
       .catch(() => {});
   }, []);
 
-  return (
-    <aside className={`${collapsed ? 'w-[52px]' : 'w-[240px]'} h-screen bg-sidebar-bg border-r border-border/30 flex flex-col flex-shrink-0 transition-all duration-200`}>
+  const sidebarContent = (
+    <>
       {/* Header */}
       <div className={`flex items-center ${collapsed ? 'justify-center px-2' : 'justify-between px-4'} h-[50px] border-b border-border/30`}>
         {!collapsed && (
@@ -73,8 +79,15 @@ export default function Sidebar() {
             🎯 <span>Mission Control</span>
           </Link>
         )}
+        {/* Close button on mobile, collapse toggle on desktop */}
         <button
-          onClick={toggleCollapsed}
+          onClick={() => {
+            if (window.innerWidth < 768) {
+              setMobileOpen(false);
+            } else {
+              toggleCollapsed();
+            }
+          }}
           className="w-6 h-6 flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors rounded hover:bg-sidebar-accent"
           title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
         >
@@ -168,6 +181,45 @@ export default function Sidebar() {
           </>
         )}
       </div>
-    </aside>
+    </>
+  );
+
+  return (
+    <>
+      {/* Hamburger button - visible on mobile when sidebar is closed */}
+      {!mobileOpen && (
+        <button
+          onClick={() => setMobileOpen(true)}
+          className="fixed top-3 left-3 z-30 md:hidden w-10 h-10 flex items-center justify-center rounded-lg bg-card border border-border text-foreground hover:bg-muted transition-colors shadow-sm"
+          aria-label="Open menu"
+        >
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <line x1="3" y1="6" x2="21" y2="6" />
+            <line x1="3" y1="12" x2="21" y2="12" />
+            <line x1="3" y1="18" x2="21" y2="18" />
+          </svg>
+        </button>
+      )}
+
+      {/* Mobile backdrop */}
+      {mobileOpen && (
+        <div
+          className="fixed inset-0 bg-black/50 z-40 md:hidden"
+          onClick={() => setMobileOpen(false)}
+        />
+      )}
+
+      {/* Sidebar - Desktop: normal flow, Mobile: fixed overlay */}
+      <aside className={`
+        ${collapsed ? 'md:w-[52px]' : 'md:w-[240px]'}
+        h-screen bg-sidebar-bg border-r border-border/30 flex flex-col flex-shrink-0 transition-all duration-200
+        ${mobileOpen
+          ? 'fixed inset-y-0 left-0 z-50 w-[240px]'
+          : 'hidden md:flex'
+        }
+      `}>
+        {sidebarContent}
+      </aside>
+    </>
   );
 }
