@@ -118,12 +118,12 @@ export default function TaskDetail({ agents }: Props) {
   };
 
   return (
-    <div className="p-6 max-w-[1080px]">
+    <div className="p-3 md:p-6 max-w-[1080px]">
       <Link to="/tasks" className="inline-flex items-center gap-1 text-[14px] text-muted-foreground hover:text-foreground no-underline mb-6 transition-colors">
         ← Back to Tasks
       </Link>
 
-      <div className="grid grid-cols-[320px_1fr] gap-8 items-start">
+      <div className="grid grid-cols-1 md:grid-cols-[320px_1fr] gap-4 md:gap-8 items-start">
         <div className="bg-card border border-border rounded-xl p-6">
           {currentAgent && (
             <div className="text-center">

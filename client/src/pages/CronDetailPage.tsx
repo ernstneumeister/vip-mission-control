@@ -217,7 +217,7 @@ export default function CronDetailPage() {
 
   if (loading) {
     return (
-      <div className="p-6">
+      <div className="p-3 md:p-6">
         <div className="py-12 text-center text-[14px] text-muted-foreground">Loading cron job...</div>
       </div>
     );
@@ -225,7 +225,7 @@ export default function CronDetailPage() {
 
   if (error || !job) {
     return (
-      <div className="p-6">
+      <div className="p-3 md:p-6">
         <button onClick={() => navigate('/tasks?tab=recurring')} className="text-[14px] text-primary hover:opacity-80 mb-4 flex items-center gap-1.5">
           <ArrowLeft size={14} /> Zurück zu Recurring
         </button>
@@ -241,7 +241,7 @@ export default function CronDetailPage() {
     : '—';
 
   return (
-    <div className="p-6 max-w-[900px]">
+    <div className="p-3 md:p-6 max-w-[900px]">
       {/* Header with back + action buttons */}
       <div className="mb-6">
         <div className="flex items-center justify-between mb-4">
