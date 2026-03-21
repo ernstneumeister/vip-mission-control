@@ -8,13 +8,13 @@ interface Props {
 
 export default function Header({ searchQuery, onSearchChange }: Props) {
   return (
-    <header className="h-[50px] bg-background border-b border-border flex items-center px-5 flex-shrink-0">
+    <header className="h-[50px] bg-background border-b border-border flex items-center pl-14 pr-4 md:px-5 flex-shrink-0">
       <div className="flex-1 flex justify-center">
         <SearchInput
           value={searchQuery}
           onChange={onSearchChange}
           placeholder="Search tasks, activity, jobs..."
-          className="w-[300px]"
+          className="w-full max-w-[300px]"
         />
       </div>
       <div className="flex items-center gap-3">

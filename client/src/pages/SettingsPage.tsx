@@ -34,7 +34,7 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="max-w-lg mx-auto py-12 px-6">
+    <div className="max-w-lg mx-auto py-6 md:py-12 px-4 md:px-6">
       <h1 className="text-2xl font-bold text-foreground mb-8">Settings</h1>
 
       {/* Avatar */}

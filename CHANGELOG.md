@@ -2,6 +2,7 @@
 
 Letzte Änderungen am VIP Mission Control Dashboard.
 
+- 6948a71 Mobile Responsive: Sidebar Drawer, File-Tree Overlay, Card Layout, Scrollable Kanban
 - 61f7c30 Settings-Seite: Name, Titel, Avatar anpassbar + 🏄 Fallback
 - 77faed2 UI: Version neben Settings statt darunter
 - be0a66e Sidebar: Versionsanzeige mit Link zur Update-Lektion

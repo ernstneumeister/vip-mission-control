@@ -140,6 +140,7 @@ export default function DocsPage() {
   const [loading, setLoading] = useState(false);
   const [treeLoading, setTreeLoading] = useState(true);
   const editorRef = useRef<HTMLDivElement>(null);
+  const [mobileTreeOpen, setMobileTreeOpen] = useState(false);
 
   // Drag & Drop state for pinned files
   const dragIndexRef = useRef<number | null>(null);
@@ -238,6 +239,7 @@ export default function DocsPage() {
   const handleSelect = useCallback(async (filePath: string) => {
     setLoading(true);
     setHasUserEdited(false);
+    setMobileTreeOpen(false); // Close mobile drawer on file select
     try {
       const data = await getDocFile(filePath);
       setActivePath(filePath);
@@ -300,6 +302,11 @@ export default function DocsPage() {
     ? ['OpenClaw', ...activePath.split('/')]
     : null;
 
+  // Short breadcrumb for mobile: only show last 2 parts
+  const mobileBreadcrumb = activePath
+    ? activePath.split('/').slice(-2)
+    : null;
+
   const formatTime = (iso: string) => {
     try {
       return new Date(iso).toLocaleString('de-DE', {
@@ -313,97 +320,133 @@ export default function DocsPage() {
     }
   };
 
+  const fileTreeContent = (
+    <>
+      <div className="px-3 py-2.5 border-b border-border flex items-center justify-between">
+        <h3 className="text-[13px] font-semibold text-muted-foreground uppercase tracking-wide">
+          Files
+        </h3>
+        {/* Close button on mobile */}
+        <button
+          onClick={() => setMobileTreeOpen(false)}
+          className="md:hidden w-6 h-6 flex items-center justify-center text-muted-foreground hover:text-foreground rounded hover:bg-muted transition-colors"
+        >
+          ✕
+        </button>
+      </div>
+
+      <div className="flex-1 overflow-y-auto py-1">
+        {/* Pinned section */}
+        {pinnedPaths.length > 0 && (
+          <>
+            <div className="px-3 pt-2 pb-1 flex items-center gap-1.5">
+              <Pin size={11} className="text-muted-foreground" />
+              <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+                Pinned
+              </span>
+            </div>
+            {pinnedPaths.map((filePath, index) => {
+              const fileName = filePath.split('/').pop() || filePath;
+              const isDragging = draggingIndex === index;
+              const isOver = dragOverIndex === index;
+              return (
+                <div
+                  key={filePath}
+                  draggable
+                  onDragStart={(e) => handlePinDragStart(e, index)}
+                  onDragOver={(e) => handlePinDragOver(e, index)}
+                  onDrop={(e) => handlePinDrop(e, index)}
+                  onDragEnd={handlePinDragEnd}
+                  className={`group flex items-center relative transition-opacity ${
+                    isDragging ? 'opacity-40' : ''
+                  }`}
+                  style={{ cursor: 'grab' }}
+                >
+                  {isOver && dragIndexRef.current !== index && (
+                    <div className="absolute left-2 right-2 top-0 h-[2px] bg-primary rounded-full z-10" />
+                  )}
+                  <span
+                    className="flex-shrink-0 pl-1.5 opacity-0 group-hover:opacity-60 text-muted-foreground cursor-grab active:cursor-grabbing"
+                  >
+                    <DragGrip />
+                  </span>
+                  <button
+                    onClick={() => handleSelect(filePath)}
+                    className={`flex-1 text-left flex items-center gap-1.5 py-1 px-1.5 text-[13px] transition-colors truncate ${
+                      activePath === filePath
+                        ? 'bg-sidebar-accent text-sidebar-primary font-medium'
+                        : 'text-sidebar-foreground hover:bg-sidebar-accent'
+                    }`}
+                  >
+                    <span className="flex-shrink-0"><File size={14} /></span>
+                    <span className="truncate">{fileName}</span>
+                  </button>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); togglePin(filePath); }}
+                    className="opacity-0 group-hover:opacity-100 p-1 mr-1 text-muted-foreground hover:text-primary transition-opacity"
+                    title="Unpin"
+                  >
+                    <Pin size={12} className="text-primary" />
+                  </button>
+                </div>
+              );
+            })}
+            <div className="border-t border-border my-2 mx-3" />
+          </>
+        )}
+
+        {/* File tree */}
+        <div className="px-1">
+          {treeLoading ? (
+            <div className="px-3 py-4 text-[13px] text-muted-foreground">Loading…</div>
+          ) : (
+            tree.map((node) => (
+              <FileTreeItem
+                key={node.path}
+                node={node}
+                depth={0}
+                activePath={activePath}
+                expanded={expanded}
+                onToggle={handleToggle}
+                onSelect={handleSelect}
+                onTogglePin={togglePin}
+                isPinnedFn={isPinned}
+              />
+            ))
+          )}
+        </div>
+      </div>
+    </>
+  );
+
   return (
     <div className="flex h-full overflow-hidden">
-      {/* Left: File tree */}
-      <div className="w-[250px] flex-shrink-0 bg-background border-r border-border flex flex-col overflow-hidden">
-        <div className="px-3 py-2.5 border-b border-border">
-          <h3 className="text-[13px] font-semibold text-muted-foreground uppercase tracking-wide">
-            Files
-          </h3>
-        </div>
+      {/* Mobile: Files button */}
+      <button
+        onClick={() => setMobileTreeOpen(true)}
+        className="md:hidden fixed bottom-4 right-4 z-30 px-4 py-2.5 bg-primary text-primary-foreground rounded-full shadow-lg text-[14px] font-medium flex items-center gap-2 hover:opacity-90 transition-opacity"
+      >
+        📁 Files
+      </button>
 
-        <div className="flex-1 overflow-y-auto py-1">
-          {/* Pinned section */}
-          {pinnedPaths.length > 0 && (
-            <>
-              <div className="px-3 pt-2 pb-1 flex items-center gap-1.5">
-                <Pin size={11} className="text-muted-foreground" />
-                <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
-                  Pinned
-                </span>
-              </div>
-              {pinnedPaths.map((filePath, index) => {
-                const fileName = filePath.split('/').pop() || filePath;
-                const isDragging = draggingIndex === index;
-                const isOver = dragOverIndex === index;
-                return (
-                  <div
-                    key={filePath}
-                    draggable
-                    onDragStart={(e) => handlePinDragStart(e, index)}
-                    onDragOver={(e) => handlePinDragOver(e, index)}
-                    onDrop={(e) => handlePinDrop(e, index)}
-                    onDragEnd={handlePinDragEnd}
-                    className={`group flex items-center relative transition-opacity ${
-                      isDragging ? 'opacity-40' : ''
-                    }`}
-                    style={{ cursor: 'grab' }}
-                  >
-                    {isOver && dragIndexRef.current !== index && (
-                      <div className="absolute left-2 right-2 top-0 h-[2px] bg-primary rounded-full z-10" />
-                    )}
-                    <span
-                      className="flex-shrink-0 pl-1.5 opacity-0 group-hover:opacity-60 text-muted-foreground cursor-grab active:cursor-grabbing"
-                    >
-                      <DragGrip />
-                    </span>
-                    <button
-                      onClick={() => handleSelect(filePath)}
-                      className={`flex-1 text-left flex items-center gap-1.5 py-1 px-1.5 text-[13px] transition-colors truncate ${
-                        activePath === filePath
-                          ? 'bg-sidebar-accent text-sidebar-primary font-medium'
-                          : 'text-sidebar-foreground hover:bg-sidebar-accent'
-                      }`}
-                    >
-                      <span className="flex-shrink-0"><File size={14} /></span>
-                      <span className="truncate">{fileName}</span>
-                    </button>
-                    <button
-                      onClick={(e) => { e.stopPropagation(); togglePin(filePath); }}
-                      className="opacity-0 group-hover:opacity-100 p-1 mr-1 text-muted-foreground hover:text-primary transition-opacity"
-                      title="Unpin"
-                    >
-                      <Pin size={12} className="text-primary" />
-                    </button>
-                  </div>
-                );
-              })}
-              <div className="border-t border-border my-2 mx-3" />
-            </>
-          )}
+      {/* Mobile: File tree backdrop */}
+      {mobileTreeOpen && (
+        <div
+          className="fixed inset-0 bg-black/50 z-40 md:hidden"
+          onClick={() => setMobileTreeOpen(false)}
+        />
+      )}
 
-          {/* File tree */}
-          <div className="px-1">
-            {treeLoading ? (
-              <div className="px-3 py-4 text-[13px] text-muted-foreground">Loading…</div>
-            ) : (
-              tree.map((node) => (
-                <FileTreeItem
-                  key={node.path}
-                  node={node}
-                  depth={0}
-                  activePath={activePath}
-                  expanded={expanded}
-                  onToggle={handleToggle}
-                  onSelect={handleSelect}
-                  onTogglePin={togglePin}
-                  isPinnedFn={isPinned}
-                />
-              ))
-            )}
-          </div>
-        </div>
+      {/* Left: File tree - Desktop: normal, Mobile: overlay drawer */}
+      <div className={`
+        bg-background border-r border-border flex flex-col overflow-hidden
+        ${mobileTreeOpen
+          ? 'fixed inset-y-0 left-0 z-50 w-[280px]'
+          : 'hidden'
+        }
+        md:relative md:flex md:w-[250px] md:flex-shrink-0
+      `}>
+        {fileTreeContent}
       </div>
 
       {/* Right: Editor */}
@@ -411,10 +454,11 @@ export default function DocsPage() {
         {activePath ? (
           <>
             {/* Toolbar */}
-            <div className="flex items-center justify-between px-4 py-2 border-b border-border bg-background flex-shrink-0">
-              <div className="flex items-center gap-2 min-w-0">
+            <div className="flex items-center justify-between px-2 md:px-4 py-2 border-b border-border bg-background flex-shrink-0">
+              <div className="flex items-center gap-2 min-w-0 flex-1">
+                {/* Desktop breadcrumb */}
                 {breadcrumb && (
-                  <div className="text-[12px] text-muted-foreground truncate flex items-center gap-1">
+                  <div className="hidden md:flex text-[12px] text-muted-foreground truncate items-center gap-1">
                     {breadcrumb.map((part, i) => (
                       <span key={i} className="flex items-center gap-1">
                         {i > 0 && <span className="text-muted-foreground/40">/</span>}
@@ -423,7 +467,6 @@ export default function DocsPage() {
                         </span>
                       </span>
                     ))}
-
                     {activePath && (
                       <button
                         onClick={() => togglePin(activePath)}
@@ -437,14 +480,29 @@ export default function DocsPage() {
                     )}
                   </div>
                 )}
+                {/* Mobile breadcrumb - shorter */}
+                {mobileBreadcrumb && (
+                  <div className="md:hidden text-[12px] text-muted-foreground truncate flex items-center gap-1">
+                    <span className="text-muted-foreground/40">…/</span>
+                    {mobileBreadcrumb.map((part, i) => (
+                      <span key={i} className="flex items-center gap-1">
+                        {i > 0 && <span className="text-muted-foreground/40">/</span>}
+                        <span className={i === mobileBreadcrumb.length - 1 ? 'text-foreground font-medium' : ''}>
+                          {part}
+                        </span>
+                      </span>
+                    ))}
+                  </div>
+                )}
               </div>
-              <div className="flex items-center gap-3 flex-shrink-0">
+              <div className="flex items-center gap-2 md:gap-3 flex-shrink-0">
                 {isDirty ? (
-                  <span className="text-[12px] text-primary font-medium animate-pulse">
-                    Ungespeicherte Änderungen
+                  <span className="text-[11px] md:text-[12px] text-primary font-medium animate-pulse whitespace-nowrap">
+                    <span className="hidden md:inline">Ungespeicherte Änderungen</span>
+                    <span className="md:hidden">Unsaved</span>
                   </span>
                 ) : lastSaved ? (
-                  <span className="text-[11px] text-muted-foreground">
+                  <span className="hidden md:inline text-[11px] text-muted-foreground">
                     Gespeichert {formatTime(lastSaved)}
                   </span>
                 ) : null}
@@ -478,11 +536,12 @@ export default function DocsPage() {
           </>
         ) : (
           <div className="flex-1 flex items-center justify-center text-muted-foreground">
-            <div className="text-center">
+            <div className="text-center px-4">
               <div className="mb-3"><FileText size={48} className="mx-auto text-muted-foreground/50" /></div>
               <div className="text-[16px] font-medium text-muted-foreground">Select a file to edit</div>
               <div className="text-[13px] mt-1">
-                Browse the file tree or use the pinned files for quick access
+                <span className="hidden md:inline">Browse the file tree or use the pinned files for quick access</span>
+                <span className="md:hidden">Tap 📁 Files to browse</span>
               </div>
             </div>
           </div>

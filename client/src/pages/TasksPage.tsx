@@ -60,8 +60,8 @@ export default function TasksPage({ agents, searchQuery }: Props) {
   ];
 
   return (
-    <div className="p-6">
-      <div className="flex items-center border-b border-border mb-6">
+    <div className="p-3 md:p-6">
+      <div className="flex items-center overflow-x-auto border-b border-border mb-4 md:mb-6">
         {subTabs.map((tab) => (
           <button
             key={tab.key}
@@ -167,12 +167,12 @@ function TasksTab({ tasks, agents, viewMode, setViewMode, agentFilter, setAgentF
 }) {
   return (
     <>
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex flex-col md:flex-row md:items-center justify-between mb-4 gap-3">
         <div>
-          <h1 className="text-[28px] font-bold text-foreground">Tasks</h1>
+          <h1 className="text-[22px] md:text-[28px] font-bold text-foreground">Tasks</h1>
           <p className="text-[14px] text-muted-foreground">{activeCount} active · {totalCount} total</p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 md:gap-3 flex-wrap">
           {viewMode === 'status' && (
             <select
               value={agentFilter}
@@ -221,11 +221,11 @@ function TasksTab({ tasks, agents, viewMode, setViewMode, agentFilter, setAgentF
 
 function AgentKanban({ tasks, agents }: { tasks: Task[]; agents: Agent[] }) {
   return (
-    <div className="flex gap-4 overflow-x-auto pb-4">
+    <div className="flex gap-3 md:gap-4 overflow-x-auto pb-4 flex-nowrap -mx-3 px-3 md:mx-0 md:px-0">
       {agents.map((agent) => {
         const agentTasks = tasks.filter((t) => t.agent_id === agent.id);
         return (
-          <div key={agent.id} className="min-w-[260px] w-[260px] bg-card border border-border rounded-xl flex flex-col">
+          <div key={agent.id} className="min-w-[220px] md:min-w-[260px] w-[220px] md:w-[260px] bg-card border border-border rounded-xl flex flex-col flex-shrink-0">
             <div className="flex items-center gap-2 px-4 py-3 border-b border-border/50">
               <AgentBadge agent={agent} size="md" />
               <div className="flex-1 min-w-0">
@@ -248,11 +248,11 @@ function AgentKanban({ tasks, agents }: { tasks: Task[]; agents: Agent[] }) {
 function StatusKanban({ tasks, agents }: { tasks: Task[]; agents: Agent[] }) {
   const statuses: Task['status'][] = ['scheduled', 'queue', 'in_progress', 'done'];
   return (
-    <div className="flex gap-4 overflow-x-auto pb-4">
+    <div className="flex gap-3 md:gap-4 overflow-x-auto pb-4 flex-nowrap -mx-3 px-3 md:mx-0 md:px-0">
       {statuses.map((status) => {
         const statusTasks = tasks.filter((t) => t.status === status);
         return (
-          <div key={status} className="min-w-[260px] w-[260px] bg-card border border-border rounded-xl flex flex-col">
+          <div key={status} className="min-w-[220px] md:min-w-[260px] w-[220px] md:w-[260px] bg-card border border-border rounded-xl flex flex-col flex-shrink-0">
             <div className="flex items-center gap-2 px-4 py-3 border-b border-border/50">
               <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: STATUS_COLORS[status] }} />
               <span className="text-[15px] font-bold text-foreground flex-1">{STATUS_LABELS[status]}</span>
@@ -272,8 +272,8 @@ function StatusKanban({ tasks, agents }: { tasks: Task[]; agents: Agent[] }) {
 function ListView({ tasks, agents }: { tasks: Task[]; agents: Agent[] }) {
   const navigate = useNavigate();
   return (
-    <div className="bg-card border border-border rounded-xl overflow-hidden">
-      <table className="w-full">
+    <div className="bg-card border border-border rounded-xl overflow-hidden overflow-x-auto">
+      <table className="w-full min-w-[600px]">
         <thead>
           <tr className="border-b border-border bg-secondary">
             <th className="text-left px-4 py-2.5 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">Task</th>
@@ -338,9 +338,9 @@ function TemplatesTab({ templates, agents, globalSearchQuery, onNewTemplate, onE
 
   return (
     <>
-      <div className="flex items-center justify-between mb-4 gap-4">
+      <div className="flex flex-col md:flex-row md:items-center justify-between mb-4 gap-3">
         <div>
-          <h1 className="text-[28px] font-bold text-foreground">Templates</h1>
+          <h1 className="text-[22px] md:text-[28px] font-bold text-foreground">Templates</h1>
           <p className="text-[14px] text-muted-foreground">Reusable blueprints for recurring agent work</p>
         </div>
         <button
@@ -533,9 +533,9 @@ function RecurringTab({ recurring, agents, globalSearchQuery, onNewRecurring, on
 
   return (
     <>
-      <div className="flex items-center justify-between mb-4 gap-4">
+      <div className="flex flex-col md:flex-row md:items-center justify-between mb-4 gap-3">
         <div>
-          <h1 className="text-[28px] font-bold text-foreground">Recurring Schedules</h1>
+          <h1 className="text-[22px] md:text-[28px] font-bold text-foreground">Recurring Schedules</h1>
           <p className="text-[14px] text-muted-foreground">Live cron jobs from OpenClaw · {cronJobs.length} total</p>
         </div>
         <button
