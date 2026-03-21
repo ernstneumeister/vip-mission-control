@@ -70,11 +70,14 @@ export default function Sidebar() {
       .catch(() => {});
   }, []);
 
+  // On mobile, always show expanded (ignore collapsed state)
+  const isCollapsed = mobileOpen ? false : collapsed;
+
   const sidebarContent = (
     <>
       {/* Header */}
-      <div className={`flex items-center ${collapsed ? 'justify-center px-2' : 'justify-between px-4'} h-[50px] border-b border-border/30`}>
-        {!collapsed && (
+      <div className={`flex items-center ${isCollapsed ? 'justify-center px-2' : 'justify-between px-4'} h-[50px] border-b border-border/30`}>
+        {!isCollapsed && (
           <Link to="/" className="text-[16px] font-bold text-foreground no-underline flex items-center gap-1.5">
             🎯 <span>Mission Control</span>
           </Link>
@@ -89,9 +92,9 @@ export default function Sidebar() {
             }
           }}
           className="w-6 h-6 flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors rounded hover:bg-sidebar-accent"
-          title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+          title={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
         >
-          {collapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
+          {isCollapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
         </button>
       </div>
 
@@ -104,11 +107,11 @@ export default function Sidebar() {
             return (
               <div
                 key={item.label}
-                className={`flex items-center ${collapsed ? 'justify-center' : 'gap-3'} px-3 py-2.5 rounded-lg text-[14px] font-medium text-muted-foreground cursor-not-allowed select-none`}
-                title={collapsed ? item.label : undefined}
+                className={`flex items-center ${isCollapsed ? 'justify-center' : 'gap-3'} px-3 py-2.5 rounded-lg text-[14px] font-medium text-muted-foreground cursor-not-allowed select-none`}
+                title={isCollapsed ? item.label : undefined}
               >
                 <span className="opacity-40 flex-shrink-0"><Icon size={18} /></span>
-                {!collapsed && <span>{item.label}</span>}
+                {!isCollapsed && <span>{item.label}</span>}
               </div>
             );
           }
@@ -116,15 +119,15 @@ export default function Sidebar() {
             <Link
               key={item.label}
               to={item.path}
-              className={`flex items-center ${collapsed ? 'justify-center' : 'gap-3'} px-3 py-2.5 rounded-lg text-[14px] font-medium no-underline transition-colors ${
+              className={`flex items-center ${isCollapsed ? 'justify-center' : 'gap-3'} px-3 py-2.5 rounded-lg text-[14px] font-medium no-underline transition-colors ${
                 isActive
                   ? 'bg-sidebar-accent text-sidebar-primary'
                   : 'text-sidebar-foreground hover:bg-sidebar-accent'
               }`}
-              title={collapsed ? item.label : undefined}
+              title={isCollapsed ? item.label : undefined}
             >
               <span className="flex-shrink-0"><Icon size={18} /></span>
-              {!collapsed && <span>{item.label}</span>}
+              {!isCollapsed && <span>{item.label}</span>}
             </Link>
           );
         })}
@@ -132,7 +135,7 @@ export default function Sidebar() {
 
       {/* Bottom user section */}
       <div className="border-t border-border/30 px-3 py-3">
-        {collapsed ? (
+        {isCollapsed ? (
           <>
             <div className="flex justify-center py-1.5">
               {userSettings.avatarUrl ? (
@@ -211,7 +214,7 @@ export default function Sidebar() {
 
       {/* Sidebar - Desktop: normal flow, Mobile: fixed overlay */}
       <aside className={`
-        ${collapsed ? 'md:w-[52px]' : 'md:w-[240px]'}
+        ${isCollapsed ? 'md:w-[52px]' : 'md:w-[240px]'}
         h-screen bg-sidebar-bg border-r border-border/30 flex flex-col flex-shrink-0 transition-all duration-200
         ${mobileOpen
           ? 'fixed inset-y-0 left-0 z-50 w-[240px]'
