@@ -106,7 +106,7 @@ function FileTreeItem({
             className={`p-1 mr-1 transition-opacity ${
               pinned
                 ? 'opacity-100 text-primary'
-                : 'opacity-0 group-hover/pin:opacity-100 text-muted-foreground hover:text-primary'
+                : 'md:opacity-0 md:group-hover/pin:opacity-100 opacity-60 text-muted-foreground hover:text-primary'
             }`}
             title={pinned ? 'Unpin' : 'Pin'}
           >
@@ -383,7 +383,7 @@ export default function DocsPage() {
                   </button>
                   <button
                     onClick={(e) => { e.stopPropagation(); togglePin(filePath); }}
-                    className="opacity-0 group-hover:opacity-100 p-1 mr-1 text-muted-foreground hover:text-primary transition-opacity"
+                    className="md:opacity-0 md:group-hover:opacity-100 opacity-60 p-1 mr-1 text-muted-foreground hover:text-primary transition-opacity"
                     title="Unpin"
                   >
                     <Pin size={12} className="text-primary" />
