@@ -2,6 +2,7 @@
 
 Letzte Änderungen am VIP Mission Control Dashboard.
 
+- b474c1a Fix: Mobile Double-Tap in Docs – Pin-Buttons immer sichtbar auf Touch
 - 691df3b Mobile Responsive: Webinar, TaskDetail, CronDetail – Grids + Padding
 - b80f79f Fix: Mobile Sidebar immer expanded (mit Labels statt nur Icons)
 - 6948a71 Mobile Responsive: Sidebar Drawer, File-Tree Overlay, Card Layout, Scrollable Kanban
