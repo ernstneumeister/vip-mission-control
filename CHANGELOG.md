@@ -2,6 +2,7 @@
 
 Letzte Änderungen am VIP Mission Control Dashboard.
 
+- 4abcac4 Security: Server nur auf localhost binden – kein öffentlicher Zugriff mehr
 - 17aa54c Fix: CORS erlaubt jetzt Tailscale *.ts.net Hostnames + HTTPS Setup
 - 9bfde59 Settings: Dashboard Emoji + dynamisches Favicon
 - b474c1a Fix: Mobile Double-Tap in Docs – Pin-Buttons immer sichtbar auf Touch

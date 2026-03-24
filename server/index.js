@@ -608,6 +608,7 @@ app.get('*', (req, res) => {
   res.sendFile(path.join(clientDist, 'index.html'));
 });
 
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`🎯 Mission Control running on http://0.0.0.0:${PORT}`);
+// Bind to localhost only – access via Tailscale HTTPS (tailscale serve proxies to localhost)
+app.listen(PORT, '127.0.0.1', () => {
+  console.log(`🎯 Mission Control running on http://127.0.0.1:${PORT} (localhost only)`);
 });
