@@ -33,8 +33,8 @@ app.use(cors({
   origin: (origin, callback) => {
     // Allow requests with no origin (same-origin, curl, etc.)
     if (!origin) return callback(null, true);
-    // Allow localhost and Tailscale IPs (100.x.x.x) and private networks
-    if (/^https?:\/\/(localhost|127\.0\.0\.1|100\.\d+\.\d+\.\d+|10\.\d+\.\d+\.\d+|192\.168\.\d+\.\d+|0\.0\.0\.0)(:\d+)?$/.test(origin)) {
+    // Allow localhost, Tailscale IPs (100.x.x.x), Tailscale hostnames (*.ts.net), and private networks
+    if (/^https?:\/\/(localhost|127\.0\.0\.1|100\.\d+\.\d+\.\d+|10\.\d+\.\d+\.\d+|192\.168\.\d+\.\d+|0\.0\.0\.0|[a-z0-9-]+\.tail[a-z0-9]+\.ts\.net)(:\d+)?$/.test(origin)) {
       return callback(null, true);
     }
     callback(new Error('CORS not allowed'));
