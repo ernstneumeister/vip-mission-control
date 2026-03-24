@@ -25,9 +25,9 @@ export default function Sidebar() {
   const [userSettings, setUserSettings] = useState(() => {
     try {
       const stored = localStorage.getItem('mc-user-settings');
-      return stored ? JSON.parse(stored) : { name: 'Admin', title: 'Administrator', avatarUrl: '' };
+      return stored ? JSON.parse(stored) : { name: 'Admin', title: 'Administrator', avatarUrl: '', emoji: '🎯' };
     } catch {
-      return { name: 'Admin', title: 'Administrator', avatarUrl: '' };
+      return { name: 'Admin', title: 'Administrator', avatarUrl: '', emoji: '🎯' };
     }
   });
 
@@ -58,6 +58,26 @@ export default function Sidebar() {
     localStorage.setItem('sidebar-collapsed', String(next));
   };
 
+  // Set favicon from emoji on load
+  useEffect(() => {
+    const emoji = userSettings.emoji || '🎯';
+    const canvas = document.createElement('canvas');
+    canvas.width = 64;
+    canvas.height = 64;
+    const ctx = canvas.getContext('2d');
+    if (ctx) {
+      ctx.font = '52px serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(emoji, 32, 36);
+      const link = document.querySelector("link[rel*='icon']") as HTMLLinkElement || document.createElement('link');
+      link.type = 'image/png';
+      link.rel = 'icon';
+      link.href = canvas.toDataURL();
+      document.head.appendChild(link);
+    }
+  }, [userSettings.emoji]);
+
   useEffect(() => {
     fetch('/api/version')
       .then(r => r.json())
@@ -77,7 +97,7 @@ export default function Sidebar() {
       <div className={`flex items-center ${isCollapsed ? 'justify-center px-2' : 'justify-between px-4'} h-[50px] border-b border-border/30`}>
         {!isCollapsed && (
           <Link to="/" className="text-[16px] font-bold text-foreground no-underline flex items-center gap-1.5">
-            🎯 <span>Mission Control</span>
+            {userSettings.emoji || '🎯'} <span>Mission Control</span>
           </Link>
         )}
         {/* Close button on mobile, collapse toggle on desktop */}

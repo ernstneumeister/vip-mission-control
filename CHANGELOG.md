@@ -2,6 +2,7 @@
 
 Letzte Änderungen am VIP Mission Control Dashboard.
 
+- 9bfde59 Settings: Dashboard Emoji + dynamisches Favicon
 - b474c1a Fix: Mobile Double-Tap in Docs – Pin-Buttons immer sichtbar auf Touch
 - 691df3b Mobile Responsive: Webinar, TaskDetail, CronDetail – Grids + Padding
 - b80f79f Fix: Mobile Sidebar immer expanded (mit Labels statt nur Icons)
