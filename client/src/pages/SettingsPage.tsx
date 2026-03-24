@@ -1,6 +1,23 @@
 import { useState, useRef } from 'react';
 
-const defaults = { name: 'Admin', title: 'Chief of Agents', avatarUrl: '' };
+const defaults = { name: 'Admin', title: 'Chief of Agents', avatarUrl: '', emoji: '🎯' };
+
+function setFavicon(emoji: string) {
+  const canvas = document.createElement('canvas');
+  canvas.width = 64;
+  canvas.height = 64;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return;
+  ctx.font = '52px serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(emoji, 32, 36);
+  const link = document.querySelector("link[rel*='icon']") as HTMLLinkElement || document.createElement('link');
+  link.type = 'image/png';
+  link.rel = 'icon';
+  link.href = canvas.toDataURL();
+  document.head.appendChild(link);
+}
 
 function loadSettings() {
   try {
@@ -29,6 +46,7 @@ export default function SettingsPage() {
   const handleSave = () => {
     localStorage.setItem('mc-user-settings', JSON.stringify(settings));
     window.dispatchEvent(new Event('mc-settings-updated'));
+    setFavicon(settings.emoji || '🎯');
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
   };
@@ -53,6 +71,26 @@ export default function SettingsPage() {
         </button>
         <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} />
         <span className="text-xs text-muted-foreground mt-2">Click to change avatar</span>
+      </div>
+
+      {/* Emoji */}
+      <div className="mb-4">
+        <label className="block text-sm font-medium text-foreground mb-1.5">Dashboard Emoji</label>
+        <div className="flex items-center gap-3">
+          <input
+            type="text"
+            value={settings.emoji}
+            onChange={(e) => {
+              // Only keep the last entered emoji/character
+              const val = e.target.value;
+              const emoji = [...val].pop() || '🎯';
+              setSettings((s: typeof defaults) => ({ ...s, emoji }));
+            }}
+            className="w-16 px-3 py-2 rounded-md border border-border bg-background text-foreground text-2xl text-center focus:outline-none focus:ring-2 focus:ring-primary/50"
+            placeholder="🎯"
+          />
+          <span className="text-xs text-muted-foreground">Wird oben links in der Sidebar und als Browser-Favicon angezeigt</span>
+        </div>
       </div>
 
       {/* Name */}
