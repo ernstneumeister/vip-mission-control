@@ -73,6 +73,7 @@ export const saveDocFile = (filePath: string, content: string) =>
     method: 'PUT',
     body: JSON.stringify({ path: filePath, content }),
   });
+export const deleteDocFile = (filePath: string) => fetchJSON<{ success: boolean; deleted: string }>(`/files?path=${encodeURIComponent(filePath)}`, { method: 'DELETE' });
 
 // Webinar
 export const getWebinarStats = (fresh = false) => {

@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useLocation, Link } from 'react-router-dom';
-import { LayoutDashboard, Bot, Radio, CheckSquare, FileText, Zap, BarChart, Settings, ChevronLeft, ChevronRight, Presentation, Key } from './Icons';
+import { LayoutDashboard, Bot, Radio, CheckSquare, FileText, Zap, BarChart, Settings, ChevronLeft, ChevronRight, Presentation, Key, Globe } from './Icons';
 
 const navItems = [
   { icon: LayoutDashboard, label: 'Dashboard', path: '/dashboard', disabled: true },

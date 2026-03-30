@@ -27,8 +27,27 @@ interface Props {
 import taskLists from 'markdown-it-task-lists';
 const md = markdownit({ html: true, linkify: true, typographer: true }).use(taskLists);
 
+function renderFrontmatterBlock(raw: string): { frontmatterHtml: string; body: string } {
+  if (!raw.startsWith('---')) return { frontmatterHtml: '', body: raw };
+  const end = raw.indexOf('\n---', 3);
+  if (end === -1) return { frontmatterHtml: '', body: raw };
+  const yamlBlock = raw.slice(4, end).trim();
+  const body = raw.slice(end + 4).replace(/^\n+/, '');
+  // Render as a styled info block
+  const rows = yamlBlock.split('\n').map(line => {
+    const sep = line.indexOf(':');
+    if (sep === -1) return `<span style="color:var(--muted-foreground)">${line}</span>`;
+    const key = line.slice(0, sep).trim();
+    const val = line.slice(sep + 1).trim();
+    return `<span style="color:var(--primary);font-weight:600">${key}</span><span style="color:var(--muted-foreground)">:</span> ${val}`;
+  }).join('<br/>');
+  const frontmatterHtml = `<div style="background:var(--muted);border:1px solid var(--border);border-radius:8px;padding:12px 16px;margin-bottom:16px;font-family:var(--font-mono,monospace);font-size:12px;line-height:1.7;color:var(--foreground)">${rows}</div>`;
+  return { frontmatterHtml, body };
+}
+
 function markdownToHtml(markdown: string): string {
-  return md.render(markdown);
+  const { frontmatterHtml, body } = renderFrontmatterBlock(markdown);
+  return frontmatterHtml + md.render(body);
 }
 
 export default function TipTapEditor({ content, onChange, editable = true }: Props) {
