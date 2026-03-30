@@ -2,6 +2,7 @@
 
 Letzte Änderungen am VIP Mission Control Dashboard.
 
+- 5a64142 v0.2.1: Frontmatter viewer, env tokens scan, file delete, browser back navigation
 - 4abcac4 Security: Server nur auf localhost binden – kein öffentlicher Zugriff mehr
 - 17aa54c Fix: CORS erlaubt jetzt Tailscale *.ts.net Hostnames + HTTPS Setup
 - 9bfde59 Settings: Dashboard Emoji + dynamisches Favicon

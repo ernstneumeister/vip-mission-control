@@ -22,8 +22,8 @@ function isValidId(id) {
 }
 
 function isValidEnvKey(key) {
-  // Env keys: uppercase letters, numbers, underscores
-  return /^[A-Za-z_][A-Za-z0-9_]*$/.test(key);
+  // Env keys: letters, numbers, underscores, dots (for dotted config paths)
+  return /^[A-Za-z_][A-Za-z0-9_.]*$/.test(key);
 }
 
 const app = express();
@@ -34,7 +34,7 @@ app.use(cors({
     // Allow requests with no origin (same-origin, curl, etc.)
     if (!origin) return callback(null, true);
     // Allow localhost, Tailscale IPs (100.x.x.x), Tailscale hostnames (*.ts.net), and private networks
-    if (/^https?:\/\/(localhost|127\.0\.0\.1|100\.\d+\.\d+\.\d+|10\.\d+\.\d+\.\d+|192\.168\.\d+\.\d+|0\.0\.0\.0|[a-z0-9-]+\.tail[a-z0-9]+\.ts\.net)(:\d+)?$/.test(origin)) {
+    if (/^https?:\/\/(localhost|127\.0\.0\.1|100\.\d+\.\d+\.\d+|10\.\d+\.\d+\.\d+|192\.168\.\d+\.\d+|0\.0\.0\.0|[a-z0-9-]+\.tail[a-z0-9]+\.ts\.net|[a-z0-9]+\.ernstneumeister\.pages\.dev)(:\d+)?$/.test(origin)) {
       return callback(null, true);
     }
     callback(new Error('CORS not allowed'));
@@ -461,19 +461,53 @@ app.get('/api/activity/:taskId', (req, res) => {
   res.json(logs);
 });
 
+// Helper: recursively collect config secrets by dotted path
+function collectConfigSecrets(obj, currentPath, results) {
+  currentPath = currentPath || '';
+  results = results || {};
+  const secretKeywords = ['token', 'secret', 'key', 'password', 'apptoken', 'bottoken'];
+  for (const k of Object.keys(obj || {})) {
+    const v = obj[k];
+    const fullPath = currentPath ? (currentPath + '.' + k) : k;
+    if (fullPath.includes('node_modules')) continue;
+    if (v !== null && typeof v === 'object' && !Array.isArray(v)) {
+      collectConfigSecrets(v, fullPath, results);
+    } else if (typeof v === 'string') {
+      const lowerKey = k.toLowerCase();
+      if (secretKeywords.some(function(kw) { return lowerKey.includes(kw); })) {
+        if (/^\$\{[^}]+\}$/.test(v.trim())) continue;
+        if (v.length < 5) continue;
+        results[fullPath] = v;
+      }
+    }
+  }
+  return results;
+}
+
 // ─── Environment Variables ───
 app.get('/api/env', (req, res) => {
   try {
     const configPath = path.join(process.env.HOME || '/root', '.openclaw', 'openclaw.json');
     const config = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
-    const vars = config?.env?.vars || {};
-    // Return keys with masked values
+    const vars = config && config.env && config.env.vars ? config.env.vars : {};
+    const maskValue = function(v) {
+      const s = String(v);
+      return s.length > 8 ? s.slice(0, 4) + '•'.repeat(Math.min(s.length - 8, 20)) + s.slice(-4) : '••••••••';
+    };
+    // env.vars entries first
     const masked = {};
-    for (const [key, value] of Object.entries(vars)) {
-      const v = String(value);
-      masked[key] = v.length > 8 ? v.slice(0, 4) + '•'.repeat(Math.min(v.length - 8, 20)) + v.slice(-4) : '••••••••';
+    for (const key of Object.keys(vars)) {
+      masked[key] = maskValue(vars[key]);
     }
-    res.json({ vars: masked, count: Object.keys(vars).length });
+    // Collect additional secrets from the full config
+    const configSecrets = collectConfigSecrets(config, '', {});
+    for (const dotPath of Object.keys(configSecrets)) {
+      if (dotPath.startsWith('env.vars.')) continue;
+      if (!(dotPath in masked)) {
+        masked[dotPath] = maskValue(configSecrets[dotPath]);
+      }
+    }
+    res.json({ vars: masked, count: Object.keys(masked).length });
   } catch(e) {
     res.status(500).json({ error: 'Failed to read config: ' + e.message });
   }
@@ -481,12 +515,25 @@ app.get('/api/env', (req, res) => {
 
 app.get('/api/env/:key', (req, res) => {
   try {
-    if (!isValidEnvKey(req.params.key)) return res.status(400).json({ error: 'Invalid key name' });
+    const key = req.params.key;
+    if (!isValidEnvKey(key)) return res.status(400).json({ error: 'Invalid key name' });
     const configPath = path.join(process.env.HOME || '/root', '.openclaw', 'openclaw.json');
     const config = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
-    const value = config?.env?.vars?.[req.params.key];
+    let value;
+    if (key.includes('.')) {
+      // Dotted config path — walk the config object
+      const parts = key.split('.');
+      let node = config;
+      for (const part of parts) {
+        if (node === null || typeof node !== 'object') { node = undefined; break; }
+        node = node[part];
+      }
+      value = node;
+    } else {
+      value = config && config.env && config.env.vars ? config.env.vars[key] : undefined;
+    }
     if (value === undefined) return res.status(404).json({ error: 'Key not found' });
-    res.json({ key: req.params.key, value: String(value) });
+    res.json({ key, value: String(value) });
   } catch(e) {
     res.status(500).json({ error: e.message });
   }
@@ -499,8 +546,13 @@ app.put('/api/env/:key', (req, res) => {
     const key = req.params.key;
     if (!isValidEnvKey(key)) return res.status(400).json({ error: 'Invalid key name' });
     const safeValue = String(value).replace(/[;&|`$(){}!<>\\]/g, '');
-    // Use openclaw config set for safe writing
-    execSync(`openclaw config set "env.vars.${key}" "${safeValue.replace(/"/g, '\\"')}"`, { encoding: 'utf-8', timeout: 10000 });
+    if (key.includes('.')) {
+      // Dotted config path
+      execSync(`openclaw config set "${key}" "${safeValue.replace(/"/g, '\\"')}"`, { encoding: 'utf-8', timeout: 10000 });
+    } else {
+      // Simple env var key
+      execSync(`openclaw config set "env.vars.${key}" "${safeValue.replace(/"/g, '\\"')}"`, { encoding: 'utf-8', timeout: 10000 });
+    }
     res.json({ success: true, key });
   } catch(e) {
     res.status(500).json({ error: 'Failed to save: ' + e.message });
@@ -509,8 +561,13 @@ app.put('/api/env/:key', (req, res) => {
 
 app.delete('/api/env/:key', (req, res) => {
   try {
-    if (!isValidEnvKey(req.params.key)) return res.status(400).json({ error: 'Invalid key name' });
-    execSync(`openclaw config unset "env.vars.${req.params.key}"`, { encoding: 'utf-8', timeout: 10000 });
+    const key = req.params.key;
+    if (!isValidEnvKey(key)) return res.status(400).json({ error: 'Invalid key name' });
+    if (key.includes('.')) {
+      execSync(`openclaw config unset "${key}"`, { encoding: 'utf-8', timeout: 10000 });
+    } else {
+      execSync(`openclaw config unset "env.vars.${key}"`, { encoding: 'utf-8', timeout: 10000 });
+    }
     res.json({ success: true });
   } catch(e) {
     res.status(500).json({ error: 'Failed to delete: ' + e.message });
@@ -575,6 +632,27 @@ app.get('/api/docs/file', (req, res) => {
     res.json({ path: filePath, content, modified: stat.mtime, size: stat.size });
   } catch(e) {
     res.status(404).json({ error: 'File not found' });
+  }
+});
+
+app.delete('/api/files', (req, res) => {
+  try {
+    const filePath = req.query.path;
+    if (!filePath) return res.status(400).json({ error: 'path required' });
+    const fullPath = path.join('/root/clawd', filePath);
+    // Security: must be under /root/clawd and not escape
+    if (!fullPath.startsWith('/root/clawd/')) return res.status(403).json({ error: 'Access denied' });
+    // Don't allow deleting critical files
+    const protected_files = ['AGENTS.md', 'SOUL.md', 'TOOLS.md', 'USER.md', 'MEMORY.md', 'IDENTITY.md', 'HEARTBEAT.md'];
+    const basename = path.basename(fullPath);
+    if (protected_files.includes(basename) && path.dirname(fullPath) === '/root/clawd') {
+      return res.status(403).json({ error: 'Cannot delete protected workspace file: ' + basename });
+    }
+    if (!fs.existsSync(fullPath)) return res.status(404).json({ error: 'File not found' });
+    fs.unlinkSync(fullPath);
+    res.json({ success: true, deleted: filePath });
+  } catch(e) {
+    res.status(500).json({ error: 'Failed to delete: ' + e.message });
   }
 });
 

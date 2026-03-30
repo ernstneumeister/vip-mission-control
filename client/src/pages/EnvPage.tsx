@@ -140,7 +140,7 @@ export default function EnvPage() {
             <Key size={20} className="text-amber-500" />
           </div>
           <div>
-            <h1 className="text-lg md:text-xl font-bold text-foreground">Environment Variables</h1>
+            <h1 className="text-lg md:text-xl font-bold text-foreground">Environment Variables &amp; Tokens</h1>
             <p className="text-sm text-muted-foreground">{entries.length} variable{entries.length !== 1 ? 's' : ''} configured</p>
           </div>
         </div>
@@ -171,7 +171,7 @@ export default function EnvPage() {
               <input
                 type="text"
                 value={newKey}
-                onChange={e => setNewKey(e.target.value.toUpperCase().replace(/[^A-Z0-9_]/g, ''))}
+                onChange={e => setNewKey(e.target.value.replace(/[^A-Za-z0-9_.]/g, ''))}
                 placeholder="API_KEY_NAME"
                 className="w-full px-3 py-2 rounded-md border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-primary"
                 autoFocus

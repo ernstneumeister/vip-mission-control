@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import TipTapEditor from '../components/TipTapEditor';
-import { getDocTree, getDocFile, saveDocFile } from '../api';
+import { getDocTree, getDocFile, saveDocFile, deleteDocFile } from '../api';
 import { Folder, FolderOpen, File, FileCode, FileText, Settings as GearIcon, Pin } from '../components/Icons';
 
 interface TreeNode {
@@ -141,6 +141,8 @@ export default function DocsPage() {
   const [treeLoading, setTreeLoading] = useState(true);
   const editorRef = useRef<HTMLDivElement>(null);
   const [mobileTreeOpen, setMobileTreeOpen] = useState(false);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   // Drag & Drop state for pinned files
   const dragIndexRef = useRef<number | null>(null);
@@ -247,7 +249,7 @@ export default function DocsPage() {
       setOriginalContent(data.content);
       setLastSaved(data.modified);
       // Update URL with file path for deep linking
-      setSearchParams({ file: filePath }, { replace: true });
+      setSearchParams({ file: filePath });
     } catch (e) {
       console.error('Failed to load file', e);
     } finally {
@@ -255,10 +257,10 @@ export default function DocsPage() {
     }
   }, [activePath, setSearchParams]);
 
-  // Load file from URL query param on mount
+  // Load file from URL query param (on mount + browser back/forward)
   useEffect(() => {
     const fileParam = searchParams.get('file');
-    if (fileParam && !activePath) {
+    if (fileParam && fileParam !== activePath) {
       handleSelect(fileParam);
       // Auto-expand parent folders
       const parts = fileParam.split('/');
@@ -267,10 +269,35 @@ export default function DocsPage() {
         expanded[parts.slice(0, i).join('/')] = true;
       }
       setExpanded(prev => ({ ...prev, ...expanded }));
+    } else if (!fileParam && activePath) {
+      // User navigated back to docs root
+      setActivePath(null);
+      setContent('');
+      setOriginalContent('');
     }
   }, [searchParams]);
 
   // Save
+  const handleDelete = useCallback(async () => {
+    if (!activePath) return;
+    setDeleting(true);
+    try {
+      await deleteDocFile(activePath);
+      setDeleteConfirmOpen(false);
+      setActivePath(null);
+      setContent('');
+      setOriginalContent('');
+      setSearchParams({}, { replace: true });
+      // Refresh tree
+      setTreeLoading(true);
+      getDocTree().then(setTree).finally(() => setTreeLoading(false));
+    } catch (e: any) {
+      alert('Fehler beim Löschen: ' + (e.message || 'Unknown error'));
+    } finally {
+      setDeleting(false);
+    }
+  }, [activePath, setSearchParams]);
+
   const handleSave = useCallback(async () => {
     if (!activePath || !isDirty) return;
     setSaving(true);
@@ -421,6 +448,41 @@ export default function DocsPage() {
 
   return (
     <div className="flex h-full overflow-hidden">
+      {deleteConfirmOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={() => setDeleteConfirmOpen(false)}>
+          <div className="bg-card border border-border rounded-xl p-6 max-w-sm mx-4 shadow-2xl" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 rounded-full bg-red-500/10 flex items-center justify-center flex-shrink-0">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-red-500">
+                  <polyline points="3 6 5 6 21 6"/>
+                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                </svg>
+              </div>
+              <div>
+                <h3 className="text-base font-semibold text-foreground">Datei löschen?</h3>
+                <p className="text-sm text-muted-foreground mt-0.5 break-all">{activePath}</p>
+              </div>
+            </div>
+            <p className="text-sm text-muted-foreground mb-5">Diese Aktion kann nicht rückgängig gemacht werden.</p>
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={() => setDeleteConfirmOpen(false)}
+                disabled={deleting}
+                className="px-4 py-2 rounded-lg border border-border text-sm text-muted-foreground hover:text-foreground transition-colors"
+              >
+                Abbrechen
+              </button>
+              <button
+                onClick={handleDelete}
+                disabled={deleting}
+                className="px-4 py-2 rounded-lg bg-red-600 text-white text-sm font-medium hover:bg-red-700 transition-colors disabled:opacity-50"
+              >
+                {deleting ? 'Löschen...' : 'Ja, löschen'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       {/* Mobile: Files button */}
       <button
         onClick={() => setMobileTreeOpen(true)}
@@ -506,6 +568,18 @@ export default function DocsPage() {
                     Gespeichert {formatTime(lastSaved)}
                   </span>
                 ) : null}
+                {activePath && !isDirty && !(['AGENTS.md','SOUL.md','TOOLS.md','USER.md','MEMORY.md','IDENTITY.md','HEARTBEAT.md'].includes(activePath) ) && (
+                  <button
+                    onClick={() => setDeleteConfirmOpen(true)}
+                    className="p-1.5 rounded hover:bg-red-500/10 text-muted-foreground hover:text-red-400 transition-colors"
+                    title="Datei löschen"
+                  >
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <polyline points="3 6 5 6 21 6"/>
+                      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                    </svg>
+                  </button>
+                )}
                 <button
                   onClick={handleSave}
                   disabled={!isDirty || saving}
