@@ -2,14 +2,8 @@ import { useState, useEffect, useCallback } from 'react';
 import { useLocation, Link } from 'react-router-dom';
 
 const navItems = [
-  { icon: LayoutDashboard, label: 'Dashboard', path: '/dashboard', disabled: true },
-  { icon: Bot, label: 'Agents', path: '/agents', disabled: true },
-  { icon: Radio, label: 'Activity', path: '/activity', disabled: true },
-  { icon: CheckSquare, label: 'Tasks', path: '/tasks', disabled: false },
   { icon: FileText, label: 'Docs', path: '/docs', disabled: false },
   { icon: Key, label: 'Env Vars', path: '/env', disabled: false },
-  { icon: Zap, label: 'Skills', path: '/skills', disabled: true },
-  { icon: BarChart, label: 'Usage', path: '/usage', disabled: true },
 ];
 
 export default function Sidebar() {
