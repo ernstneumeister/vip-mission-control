@@ -38,11 +38,24 @@ Open http://localhost:3111
 
 ## Configuration
 
-The dashboard auto-detects your OpenClaw workspace at `~/.openclaw/workspace` (or the workspace configured for your agent).
+The dashboard auto-detects your OpenClaw workspace in this order:
+1. `OPENCLAW_WORKSPACE` environment variable
+2. `openclaw config get workspace`
+3. `~/.openclaw/openclaw.json` → `workspace` field
+4. Common paths: `~/clawd`, `~/openclaw`, `/root/clawd`
 
-**Docs Editor:** Serves files from the workspace root.
+**Docs Editor:** Serves files from the detected workspace root.
 **Env Vars:** Reads/writes `env.vars` from `~/.openclaw/openclaw.json` via `openclaw config set/unset`.
-**Cron:** Uses `openclaw cron` CLI commands.
+
+## Hinweise für den installierenden Assistenten
+
+Wenn du dieses Dashboard installierst, beachte bitte:
+
+1. **Workspace-Pfad:** Das Dashboard erkennt den Workspace automatisch. Falls dein Workspace nicht unter `/root/clawd` liegt (z.B. `/home/admin/clawd`), setze die Env-Variable: `OPENCLAW_WORKSPACE=/pfad/zum/workspace` in der systemd Service-Datei.
+2. **Service einrichten:** Erstelle eine systemd Service-Datei damit das Dashboard nach einem Neustart automatisch startet. Setze `WorkingDirectory` auf den Ordner wo du das Repo geklont hast.
+3. **Port 3111:** Das Dashboard lauscht auf Port 3111 (nur localhost). Stelle sicher, dass Tailscale installiert und verbunden ist, damit dein User darauf zugreifen kann.
+4. **Build:** Immer `cd client && npx vite build` ausführen nach dem Klonen oder Updaten.
+5. **Nach der Installation:** Prüfe selbst ob das Dashboard erreichbar ist, bevor du deinem User den Link gibst. Öffne den Link nicht einfach blind.
 
 ## License
 

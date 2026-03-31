@@ -575,7 +575,27 @@ app.delete('/api/env/:key', (req, res) => {
 });
 
 // ─── Docs / Editor ───
-const DOCS_ROOT = '/root/clawd';
+// Auto-detect workspace: env var > openclaw config > fallback
+function detectWorkspace() {
+  if (process.env.OPENCLAW_WORKSPACE) return process.env.OPENCLAW_WORKSPACE;
+  try {
+    const result = execSync('openclaw config get workspace 2>/dev/null', { encoding: 'utf-8' }).trim();
+    if (result && fs.existsSync(result)) return result;
+  } catch {}
+  try {
+    const configPath = path.join(process.env.HOME || '/root', '.openclaw', 'openclaw.json');
+    const config = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
+    if (config.workspace && fs.existsSync(config.workspace)) return config.workspace;
+  } catch {}
+  // Fallback: check common locations
+  const home = process.env.HOME || '/root';
+  for (const candidate of [`${home}/clawd`, `${home}/openclaw`, '/root/clawd']) {
+    if (fs.existsSync(candidate)) return candidate;
+  }
+  return '/root/clawd';
+}
+const DOCS_ROOT = detectWorkspace();
+console.log(`📂 Workspace: ${DOCS_ROOT}`);
 
 function getFileTree(dir, basePath = '') {
   const items = [];
@@ -639,9 +659,9 @@ app.delete('/api/files', (req, res) => {
   try {
     const filePath = req.query.path;
     if (!filePath) return res.status(400).json({ error: 'path required' });
-    const fullPath = path.join('/root/clawd', filePath);
-    // Security: must be under /root/clawd and not escape
-    if (!fullPath.startsWith('/root/clawd/')) return res.status(403).json({ error: 'Access denied' });
+    const fullPath = path.join(DOCS_ROOT, filePath);
+    // Security: must be under workspace and not escape
+    if (!fullPath.startsWith(DOCS_ROOT + '/')) return res.status(403).json({ error: 'Access denied' });
     // Don't allow deleting critical files
     const protected_files = ['AGENTS.md', 'SOUL.md', 'TOOLS.md', 'USER.md', 'MEMORY.md', 'IDENTITY.md', 'HEARTBEAT.md'];
     const basename = path.basename(fullPath);
