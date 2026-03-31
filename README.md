@@ -4,10 +4,8 @@ A beautiful agent dashboard for [OpenClaw](https://github.com/openclaw/openclaw)
 
 ## Features
 
-- **📋 Tasks** – Kanban board with agent assignment, status tracking, and templates
 - **📝 Docs** – Built-in markdown editor for your workspace files (SOUL.md, AGENTS.md, etc.)
 - **🔑 Env Vars** – Manage your OpenClaw environment variables securely
-- **⚡ Cron** – View, enable/disable, and manage OpenClaw cron jobs
 - **🌗 Dark/Light Mode** – Automatic theme detection
 
 ## Quick Start

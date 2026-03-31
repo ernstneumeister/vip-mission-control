@@ -2,31 +2,33 @@
 
 Letzte Änderungen am VIP Mission Control Dashboard.
 
-## v0.2.1 (aktuell)
+## v0.2.2 (aktuell)
 
-- Vereinfachte Ansicht: Nur noch Docs und Env Vars in der Seitenleiste
-- Dateien direkt per Link öffnen (Deep Links mit `?file=pfad`)
+- Aufgeräumte Oberfläche: Nur noch Docs und Env Vars sichtbar (weitere Features folgen)
+- Workspace wird automatisch erkannt (funktioniert jetzt auch bei nicht-root Installationen)
+- Installationshinweise für Assistenten in der README
+- Build-Fehler behoben, der bei Neuinstallationen zu Problemen führte
+
+## v0.2.1
+
+- Dateien direkt per Link öffnen (Deep Links)
 - API-Keys und Tokens sicher verwalten (Env Vars Editor)
-- Dateien löschen + Browser-Zurück-Navigation verbessert
-- Inhaltsverzeichnis (Frontmatter) wird oben in Dokumenten angezeigt
-- Sicherheit: Dashboard nur noch lokal erreichbar, kein öffentlicher Zugriff
+- Dateien löschen und Browser-Navigation verbessert
+- Frontmatter-Viewer für Markdown-Dateien
 
 ## v0.2.0
 
-- Einstellungen: Name, Titel und Profilbild anpassbar
-- Eigenes Emoji als Favicon (erscheint im Browser-Tab)
-- Mobile Ansicht komplett überarbeitet: Seitenleiste als Drawer, alle Seiten mobilfreundlich
-- Touch-Bedienung verbessert (Pin-Buttons immer sichtbar auf Mobilgeräten)
-- Versionsanzeige in der Seitenleiste mit Link zur Update-Anleitung
-- Sicherheit: Eingaben werden geprüft, Dateizugriff abgesichert
+- Notion-ähnlicher Editor mit Slash-Commands und Drag & Drop
+- Cron-Jobs verwalten (anzeigen, aktivieren, deaktivieren)
+- Dark Mode und Light Mode
+- Mobile-Ansicht komplett überarbeitet
+- Settings-Seite (Name, Avatar, Emoji anpassbar)
+- Versionanzeige mit Update-Hinweis
 
 ## v0.1.0
 
-- Docs-Editor: Markdown-Dateien direkt im Browser bearbeiten (WYSIWYG wie Notion)
-- Slash-Commands im Editor (`/` für Überschriften, Listen, Tabellen etc.)
-- Drag & Drop: Dateien in der Seitenleiste neu anordnen
-- Checkboxen, Hervorhebungen und Tabellen im Editor
-- Dunkler Modus + heller Modus
-- Kollabierbare Seitenleiste
-- Grundlegende Aufgaben- und Cron-Verwaltung (intern)
-- Erstes Release des VIP Mission Control Dashboards
+- Erstes Release
+- Task-Board mit Kanban-Ansicht
+- Docs-Editor mit Markdown-Unterstützung
+- Pinned Files für Schnellzugriff
+- Sicherheit: CORS, Input-Validierung, Path-Traversal-Schutz

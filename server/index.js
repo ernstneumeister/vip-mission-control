@@ -587,15 +587,14 @@ function detectWorkspace() {
     const config = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
     if (config.workspace && fs.existsSync(config.workspace)) return config.workspace;
   } catch {}
-  // Fallback: check common locations
   const home = process.env.HOME || '/root';
-  for (const candidate of [`${home}/clawd`, `${home}/openclaw`, '/root/clawd']) {
+    for (const candidate of [home + '/clawd', home + '/openclaw', '/root/clawd']) {
     if (fs.existsSync(candidate)) return candidate;
   }
   return '/root/clawd';
 }
 const DOCS_ROOT = detectWorkspace();
-console.log(`📂 Workspace: ${DOCS_ROOT}`);
+console.log(\`📂 Workspace: \${DOCS_ROOT}\`);
 
 function getFileTree(dir, basePath = '') {
   const items = [];
@@ -660,12 +659,12 @@ app.delete('/api/files', (req, res) => {
     const filePath = req.query.path;
     if (!filePath) return res.status(400).json({ error: 'path required' });
     const fullPath = path.join(DOCS_ROOT, filePath);
-    // Security: must be under workspace and not escape
+    // Security: must be under /root/clawd and not escape
     if (!fullPath.startsWith(DOCS_ROOT + '/')) return res.status(403).json({ error: 'Access denied' });
     // Don't allow deleting critical files
     const protected_files = ['AGENTS.md', 'SOUL.md', 'TOOLS.md', 'USER.md', 'MEMORY.md', 'IDENTITY.md', 'HEARTBEAT.md'];
     const basename = path.basename(fullPath);
-    if (protected_files.includes(basename) && path.dirname(fullPath) === '/root/clawd') {
+    if (protected_files.includes(basename) && path.dirname(fullPath) === DOCS_ROOT) {
       return res.status(403).json({ error: 'Cannot delete protected workspace file: ' + basename });
     }
     if (!fs.existsSync(fullPath)) return res.status(404).json({ error: 'File not found' });
