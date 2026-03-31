@@ -75,9 +75,6 @@ export const saveDocFile = (filePath: string, content: string) =>
   });
 export const deleteDocFile = (filePath: string) => fetchJSON<{ success: boolean; deleted: string }>(`/files?path=${encodeURIComponent(filePath)}`, { method: 'DELETE' });
 
-  const qs = fresh ? '?fresh=1' : '';
-};
-
 // Environment Variables
 export const getEnvVars = () => fetchJSON<{ vars: Record<string, string>; count: number }>('/env');
 export const getEnvVarValue = (key: string) => fetchJSON<{ key: string; value: string }>(`/env/${encodeURIComponent(key)}`);
