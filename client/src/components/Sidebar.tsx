@@ -3,6 +3,7 @@ import { useLocation, Link } from 'react-router-dom';
 
 const navItems = [
   { icon: FileText, label: 'Docs', path: '/docs', disabled: false },
+  { icon: CheckSquare, label: 'Tasks', path: '/tasks', disabled: false },
   { icon: Key, label: 'Env Vars', path: '/env', disabled: false },
 ];
 

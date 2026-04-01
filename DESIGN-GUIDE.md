@@ -1,7 +1,7 @@
 # Mission Control – Design Guide
 
 ## Reference
-Replicate the BMHQ dashboard style. Clean, modern, minimal SaaS dashboard.
+Clean, modern, minimal SaaS dashboard.
 
 ## Layout
 - **Fixed left sidebar:** ~180px wide, white background (#FFFFFF), right border 1px solid #E5E7EB

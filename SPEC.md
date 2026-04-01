@@ -1,7 +1,7 @@
 # Mission Control Dashboard – v0.1 Spec
 
 ## Overview
-A self-hosted task management dashboard for managing OpenClaw agent tasks, cron jobs, recurring schedules, and templates. Inspired by BMHQ (Brian Castle's dashboard).
+A self-hosted task management dashboard for managing OpenClaw agent tasks, cron jobs, recurring schedules, and templates.
 
 ## Tech Stack
 - **Frontend:** React + Vite + TypeScript + Tailwind CSS
@@ -10,7 +10,7 @@ A self-hosted task management dashboard for managing OpenClaw agent tasks, cron 
 - **Port:** 3111
 
 ## Design Reference
-The UI should match the BMHQ dashboard style from the screenshots:
+The UI should match a clean, modern SaaS dashboard style:
 - Dark sidebar navigation on the left (dark gray/charcoal, ~200px wide)
 - Clean white content area
 - Modern, minimal design with good spacing

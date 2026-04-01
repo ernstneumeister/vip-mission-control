@@ -74,6 +74,7 @@ export const saveDocFile = (filePath: string, content: string) =>
     body: JSON.stringify({ path: filePath, content }),
   });
 export const deleteDocFile = (filePath: string) => fetchJSON<{ success: boolean; deleted: string }>(`/files?path=${encodeURIComponent(filePath)}`, { method: 'DELETE' });
+export const searchDocFiles = (query: string) => fetchJSON<{ results: { name: string; path: string; matchType: string; snippet: string | null }[] }>(`/docs/search?q=${encodeURIComponent(query)}`);
 
 
 // Environment Variables
