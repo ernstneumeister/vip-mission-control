@@ -1,4 +1,4 @@
-# 🎯 VIP Mission Control
+# 🎯 VIP Mission Control v$(cat ${SOURCE}/VERSION 2>/dev/null || echo 'unknown')
 
 A beautiful agent dashboard for [OpenClaw](https://github.com/openclaw/openclaw).
 
