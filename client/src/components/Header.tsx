@@ -50,11 +50,16 @@ export default function Header({ searchQuery, onSearchChange }: Props) {
     }, 200);
   }, [onSearchChange]);
 
-  const handleSelect = useCallback((filePath: string) => {
-    setShowDropdown(false);
-    setLocalQuery('');
-    onSearchChange('');
-    navigate(`/docs?file=${encodeURIComponent(filePath)}`);
+  const handleSelect = useCallback((filePath: string, newTab = false) => {
+    const url = `/docs?file=${encodeURIComponent(filePath)}`;
+    if (newTab) {
+      window.open(url, '_blank');
+    } else {
+      setShowDropdown(false);
+      setLocalQuery('');
+      onSearchChange('');
+      navigate(url);
+    }
   }, [navigate, onSearchChange]);
 
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
@@ -68,7 +73,7 @@ export default function Header({ searchQuery, onSearchChange }: Props) {
       setSelectedIndex(prev => Math.max(prev - 1, 0));
     } else if (e.key === 'Enter' && selectedIndex >= 0) {
       e.preventDefault();
-      handleSelect(fileResults[selectedIndex].path);
+      handleSelect(fileResults[selectedIndex].path, e.metaKey || e.ctrlKey);
     } else if (e.key === 'Escape') {
       setShowDropdown(false);
     }
@@ -113,7 +118,7 @@ export default function Header({ searchQuery, onSearchChange }: Props) {
               {fileResults.map((file, i) => (
                 <button
                   key={file.path}
-                  onClick={() => handleSelect(file.path)}
+                  onClick={(e) => handleSelect(file.path, e.metaKey || e.ctrlKey)}
                   className={`w-full text-left px-3 py-2 flex items-center gap-2.5 text-[13px] transition-colors ${
                     i === selectedIndex
                       ? 'bg-primary/10 text-primary'
