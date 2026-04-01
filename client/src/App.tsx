@@ -24,8 +24,8 @@ export default function App() {
         <main className="flex-1 overflow-auto bg-background">
           <Routes>
             <Route path="/" element={<Navigate to="/tasks" replace />} />
-            <Route path="/tasks" element={<TasksPage agents={agents} searchQuery={searchQuery} />} />
-            <Route path="/tasks/:id" element={<TaskDetail agents={agents} />} />
+            <Route path="/tasks" element={<TasksPage agents={[]} searchQuery={searchQuery} />} />
+            <Route path="/tasks/:id" element={<TaskDetail agents={[]} />} />
             <Route path="/docs" element={<DocsPage />} />
             <Route path="/env" element={<EnvPage />} />
             <Route path="/settings" element={<SettingsPage />} />
